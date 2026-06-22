@@ -1,0 +1,78 @@
+<?php
+
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DownloadController;
+use App\Http\Controllers\Admin\EntitlementController;
+use App\Http\Controllers\Admin\LicenseActivationController;
+use App\Http\Controllers\Admin\LicenseController;
+use App\Http\Controllers\Admin\LicenseTypeController;
+use App\Http\Controllers\Admin\OrganizationController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\User\DashboardController as UserDashboardController;
+use App\Http\Controllers\User\DownloadController as UserDownloadController;
+use App\Http\Controllers\User\LicenseController as UserLicenseController;
+use App\Http\Controllers\User\ProductController as UserProductController;
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return redirect('/login');
+});
+
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+
+    if ($user?->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user?->isUser()) {
+        return redirect()->route('user.dashboard');
+    }
+
+    abort(403);
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function (): void {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('organizations', OrganizationController::class);
+        Route::resource('users', UserController::class);
+        Route::resource('products', ProductController::class);
+        Route::resource('license-types', LicenseTypeController::class);
+        Route::post('licenses/generate-key', [LicenseController::class, 'generateKey'])->name('licenses.generate-key');
+        Route::get('licenses/batch-create', [LicenseController::class, 'batchCreate'])->name('licenses.batch-create');
+        Route::post('licenses/batch-store', [LicenseController::class, 'batchStore'])->name('licenses.batch-store');
+        Route::get('licenses/{license}/show-key', [LicenseController::class, 'showKey'])->name('licenses.show-key');
+        Route::post('licenses/{license}/reveal-key', [LicenseController::class, 'revealKey'])->name('licenses.reveal-key');
+        Route::post('licenses/{license}/reset-activation', [LicenseController::class, 'resetActivation'])->name('licenses.reset-activation');
+        Route::delete('licenses/activation/{activation}', [LicenseController::class, 'destroyActivation'])->name('licenses.activation.destroy');
+        Route::resource('licenses', LicenseController::class);
+        Route::resource('license-activations', LicenseActivationController::class)->only(['index', 'destroy']);
+        Route::resource('entitlements', EntitlementController::class);
+        Route::resource('download-items', DownloadController::class);
+    });
+
+Route::middleware(['auth', 'verified', 'role:'.User::ROLE_USER])
+    ->prefix('user')
+    ->name('user.')
+    ->group(function (): void {
+        Route::get('/', [UserDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('products', UserProductController::class)->only(['index', 'show']);
+        Route::get('licenses/{license}/show-key', [UserLicenseController::class, 'showKey'])->name('licenses.show-key');
+        Route::resource('licenses', UserLicenseController::class)->only(['index', 'show']);
+        Route::get('downloads/{downloadItem}/download', [UserDownloadController::class, 'download'])->name('downloads.download');
+        Route::resource('downloads', UserDownloadController::class)->only(['index']);
+    });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
