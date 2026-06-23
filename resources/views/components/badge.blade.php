@@ -1,11 +1,19 @@
-@props(['active' => true])
+@props(['active' => true, 'variant' => null])
 
 @php
-    $classes = $active
-        ? 'bg-madani-pale text-madani-green'
-        : 'bg-gray-100 text-gray-500';
+    if ($variant) {
+        $classes = match($variant) {
+            'success' => 'vd-chip-success',
+            'warning' => 'vd-chip-warning',
+            'error'   => 'vd-chip-error',
+            'cyan'    => 'vd-chip-cyan',
+            default   => 'vd-chip',
+        };
+    } else {
+        $classes = $active ? 'vd-chip-success' : 'vd-chip-error';
+    }
 @endphp
 
-<span {{ $attributes->merge(['class' => 'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold '.$classes]) }}>
+<span {{ $attributes->merge(['class' => $classes]) }}>
     {{ $slot->isEmpty() ? ($active ? 'Active' : 'Inactive') : $slot }}
 </span>

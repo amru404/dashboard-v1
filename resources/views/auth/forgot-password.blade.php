@@ -1,25 +1,31 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    <div class="mb-7">
+        <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-3">Password Reset</p>
+        <h1 class="text-headline-sm text-vd-on-surface">Forgot Password?</h1>
+        <p class="mt-2 text-body-sm text-vd-muted leading-relaxed">
+            Enter your email address and we'll send you a link to reset your password.
+        </p>
     </div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth-session-status class="mb-5 rounded-lg border border-vd-success/25 bg-vd-success/10 px-4 py-3 text-body-sm text-vd-success" :status="session('status')" />
 
-    <form method="POST" action="{{ route('password.email') }}">
+    <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
         @csrf
-
-        <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-label for="email" value="Email address" />
+            <x-text-input id="email" type="email" name="email"
+                :value="old('email')" required autofocus
+                placeholder="you@example.com" class="mt-1" />
+            <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
+        <x-primary-button class="w-full justify-center">
+            Send Reset Link
+        </x-primary-button>
     </form>
+
+    <div class="mt-5 text-center">
+        <a href="{{ route('login') }}" class="text-body-sm text-vd-primary hover:brightness-125 transition">
+            Back to sign in
+        </a>
+    </div>
 </x-guest-layout>

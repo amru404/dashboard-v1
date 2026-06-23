@@ -1,29 +1,32 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@php
+    $isAdmin = Auth::user()->role === 'admin';
+    $layout  = $isAdmin ? 'layouts.admin' : 'layouts.user';
+@endphp
+@extends($layout)
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+@section('title', 'Profile')
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+@section('content')
+    <x-page-header title="Profile Settings" subtitle="Manage your account information and security." />
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
+    <div class="grid gap-6 lg:grid-cols-3">
+
+        {{-- Update profile info --}}
+        <div class="vd-card lg:col-span-2">
+            <h2 class="text-label-lg text-vd-on-surface mb-5">Profile Information</h2>
+            @include('profile.partials.update-profile-information-form')
+        </div>
+
+        {{-- Password --}}
+        <div class="vd-card">
+            <h2 class="text-label-lg text-vd-on-surface mb-5">Update Password</h2>
+            @include('profile.partials.update-password-form')
+        </div>
+
+        {{-- Delete account --}}
+        <div class="vd-card border-vd-error/25 lg:col-span-3">
+            <h2 class="text-label-lg text-vd-error mb-5">Danger Zone</h2>
+            @include('profile.partials.delete-user-form')
         </div>
     </div>
-</x-app-layout>
+@endsection

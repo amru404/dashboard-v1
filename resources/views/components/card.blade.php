@@ -1,3 +1,3 @@
-<section {{ $attributes->merge(['class' => 'madani-card p-6']) }}>
+<section {{ $attributes->merge(['class' => 'vd-card']) }}>
     {{ $slot }}
 </section>

@@ -5,7 +5,7 @@
 @section('content')
     <x-page-header title="{{ $product->name }}" subtitle="{{ $product->getCatalogPath() }}">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('user.products.index')">Back to products</x-button>
+            <x-button variant="secondary" :href="route('user.products.index')">Back to Products</x-button>
         </x-slot>
     </x-page-header>
 
@@ -17,67 +17,84 @@
         :path="$product->getCatalogPath()"
     />
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
-        <x-card>
-            <x-badge :active="$product->is_active" />
-            <h2 class="mt-4 text-xl font-bold text-madani-deep">Product details</h2>
-            <p class="mt-3 whitespace-pre-line text-sm leading-7 text-madani-muted">{{ $product->description ?? 'No description available.' }}</p>
+    <div class="grid gap-6 lg:grid-cols-[1fr_0.65fr]">
+
+        {{-- Product details --}}
+        <div class="vd-card">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <x-badge :active="$product->is_active" />
+            </div>
+            <h2 class="text-label-lg text-vd-on-surface mb-3">Product Details</h2>
+            <p class="text-body-sm text-vd-muted leading-relaxed whitespace-pre-line">
+                {{ $product->description ?? 'No description available.' }}
+            </p>
 
             <dl class="mt-6 grid gap-4 sm:grid-cols-2">
-                <div class="rounded-xl border border-madani-border bg-madani-ghost p-4">
-                    <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-madani-muted">Access starts</dt>
-                    <dd class="mt-2 text-sm font-semibold text-madani-deep">{{ $entitlement->start_date->format('M j, Y') }}</dd>
+                <div class="rounded-lg border border-vd-border bg-vd-secondary/40 p-4">
+                    <dt class="text-eyebrow text-vd-muted uppercase tracking-widest mb-2">Access Starts</dt>
+                    <dd class="text-label-md text-vd-on-surface">{{ $entitlement->start_date->format('M j, Y') }}</dd>
                 </div>
-                <div class="rounded-xl border border-madani-border bg-madani-ghost p-4">
-                    <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-madani-muted">Access ends</dt>
-                    <dd class="mt-2 text-sm font-semibold text-madani-deep">{{ $entitlement->end_date?->format('M j, Y') ?? 'Open ended' }}</dd>
+                <div class="rounded-lg border border-vd-border bg-vd-secondary/40 p-4">
+                    <dt class="text-eyebrow text-vd-muted uppercase tracking-widest mb-2">Access Ends</dt>
+                    <dd class="text-label-md text-vd-on-surface">{{ $entitlement->end_date?->format('M j, Y') ?? 'Open ended' }}</dd>
                 </div>
             </dl>
-        </x-card>
+        </div>
 
-        <x-card>
-            <h2 class="text-lg font-bold text-madani-deep">Available downloads</h2>
-            <div class="mt-5 space-y-3">
+        {{-- Downloads --}}
+        <div class="vd-card">
+            <h2 class="text-label-lg text-vd-on-surface mb-5">Available Downloads</h2>
+            <div class="space-y-3">
                 @forelse ($downloads as $download)
-                    <x-download-card :download-item="$download" :download-url="route('user.downloads.download', $download)" compact />
+                    <x-download-card
+                        :download-item="$download"
+                        :download-url="route('user.downloads.download', $download)"
+                        compact />
                 @empty
-                    <p class="text-sm text-madani-muted">No downloads are available for this product.</p>
+                    <p class="text-body-sm text-vd-muted">No downloads available for this product.</p>
                 @endforelse
             </div>
-        </x-card>
+        </div>
     </div>
 
-    <x-card class="mt-6 overflow-hidden p-0">
-        <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
-            <h2 class="text-lg font-bold text-madani-deep">Licenses for this product</h2>
+    {{-- Licenses table --}}
+    <div class="vd-card overflow-hidden !p-0 mt-6">
+        <div class="border-b border-vd-border px-6 py-5">
+            <h2 class="text-label-lg text-vd-on-surface">Licenses for this Product</h2>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-madani-border">
-                <thead class="bg-white">
+            <table class="vd-table">
+                <thead class="bg-vd-surface">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Type</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Activations</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Expiry</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
+                        <th class="vd-thead">Type</th>
+                        <th class="vd-thead">Activations</th>
+                        <th class="vd-thead">Expiry</th>
+                        <th class="px-6 py-4 text-right text-eyebrow text-vd-muted tracking-widest">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-madani-border bg-white">
+                <tbody class="vd-tbody">
                     @forelse ($licenses as $license)
                         <tr>
-                            <td class="px-6 py-4 text-sm font-semibold text-madani-deep">{{ $license->licenseType->name }}</td>
-                            <td class="px-6 py-4 text-sm text-madani-muted">{{ $license->activations->count() }} / {{ $license->max_activations ?? 'unlimited' }}</td>
-                            <td class="px-6 py-4 text-sm text-madani-muted">{{ $license->expired_date?->format('M j, Y') ?? 'Never' }}</td>
+                            <td class="px-6 py-4 text-label-md text-vd-on-surface">{{ $license->licenseType->name }}</td>
+                            <td class="px-6 py-4 text-body-sm text-vd-muted">
+                                {{ $license->activations->count() }} / {{ $license->max_activations ?? '∞' }}
+                            </td>
+                            <td class="px-6 py-4 text-body-sm text-vd-muted">
+                                {{ $license->expired_date?->format('M j, Y') ?? 'Never' }}
+                            </td>
                             <td class="px-6 py-4 text-right">
-                                <x-button variant="ghost" :href="route('user.licenses.show', $license)">View</x-button>
+                                <a href="{{ route('user.licenses.show', $license) }}" class="vd-btn-ghost">View</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-sm text-madani-muted">No licenses are assigned for this product.</td>
+                            <td colspan="4" class="px-6 py-10 text-center text-body-sm text-vd-muted">
+                                No licenses assigned for this product.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </x-card>
+    </div>
 @endsection
