@@ -213,17 +213,30 @@ class DownloadController extends Controller
     }
 
     /**
-     * @return array{users: EloquentCollection<int, User>, productOptions: Collection<int, array{id: int, label: string, path: string, depth: int}>}
+     * @return array{users: EloquentCollection<int, User>, productOptions: Collection<int, array{id: int, label: string, path: string, depth: int}>, userProducts: array<int, array<int>>}
      */
     private function formData(): array
     {
+        $users = User::query()
+            ->with('organization')
+            ->where('role', User::ROLE_USER)
+            ->orderBy('name')
+            ->get();
+
+        // Build user to products mapping based on entitlements
+        $userProducts = [];
+        foreach ($users as $user) {
+            $userProducts[$user->id] = \App\Models\Entitlement::query()
+                ->where('user_id', $user->id)
+                ->distinct()
+                ->pluck('product_id')
+                ->toArray();
+        }
+
         return [
-            'users' => User::query()
-                ->with('organization')
-                ->where('role', User::ROLE_USER)
-                ->orderBy('name')
-                ->get(),
+            'users' => $users,
             'productOptions' => $this->productTreeBuilder->options(),
+            'userProducts' => $userProducts,
         ];
     }
 }
