@@ -56,13 +56,13 @@
                 <span class="absolute -left-[22px] top-7 h-0.5 w-[22px] bg-madani-green/45" aria-hidden="true"></span>
             @endif
 
-            <div class="relative rounded-xl border border-madani-border bg-white px-4 py-3 shadow-sm transition hover:border-madani-green/40">
+            <div class="relative rounded-xl border border-vd-border bg-vd-secondary px-4 py-3 shadow-sm transition hover:border-madani-green/40">
                 <div class="flex flex-wrap items-start justify-between gap-4" data-tree-depth="{{ $depth }}">
                     <div class="flex min-w-0 items-start gap-3">
                         @if ($interactive && $hasChildren)
                             <button
                                 type="button"
-                                class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-madani-border bg-madani-ghost text-madani-deep transition hover:border-madani-green hover:text-madani-green madani-focus"
+                                class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-vd-border bg-vd-surface text-madani-deep transition hover:border-madani-green hover:text-madani-green madani-focus"
                                 @click.stop.prevent="toggleBranch({{ $product->id }})"
                                 :aria-expanded="(! isCollapsed({{ $product->id }})).toString()"
                             >
@@ -85,7 +85,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-semibold text-madani-deep">{{ $product->name }}</p>
                                 @if ($hasChildren)
-                                    <span class="rounded-full bg-madani-ghost px-2.5 py-1 text-xs font-semibold text-madani-muted">
+                                    <span class="rounded-full border-vd-border bg-vd-surface px-2.5 py-1 text-xs font-semibold text-madani-muted">
                                         {{ $product->allChildren->count() }}
                                     </span>
                                 @endif

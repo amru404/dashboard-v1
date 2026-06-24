@@ -130,6 +130,30 @@ class Product extends Model
     }
 
     /**
+     * @return array<int, int>
+     */
+    public function getAncestorIds(): array
+    {
+        $ancestors = [];
+        $parent = $this->parent;
+
+        while ($parent) {
+            $ancestors[] = $parent->id;
+            $parent = $parent->parent;
+        }
+
+        return $ancestors;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getAncestorIdsAndSelf(): array
+    {
+        return array_merge([$this->id], $this->getAncestorIds());
+    }
+
+    /**
      * @return Collection<int, Product>
      */
     public function getFlatDescendants(int $depth = 0): Collection

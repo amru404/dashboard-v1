@@ -11,7 +11,7 @@ class ProductTreeBuilder
     /**
      * @return Collection<int, array{id: int, name: string, code: string, label: string, path: string, depth: int, is_active: bool}>
      */
-    public function options(?Product $excludedProduct = null, bool $activeOnly = false): Collection
+    public function options(?Product $excludedProduct = null, bool $activeOnly = false, bool $rootOnly = false): Collection
     {
         $excludedIds = collect();
 
@@ -21,15 +21,29 @@ class ProductTreeBuilder
                 ->map(fn (int $id): int => $id);
         }
 
-        return $this->flattenProducts(
-            Product::query()
-                ->main()
-                ->with('allChildren')
-                ->orderBy('name')
-                ->get(),
-            $excludedIds,
-            $activeOnly
-        );
+        $products = Product::query()
+            ->main()
+            ->with('allChildren')
+            ->orderBy('name')
+            ->get();
+
+        if ($rootOnly) {
+            return $products
+                ->filter(fn (Product $product): bool => ! $excludedIds->contains($product->id))
+                ->when($activeOnly, fn (EloquentCollection $products): EloquentCollection => $products->filter(fn (Product $product): bool => $product->is_active))
+                ->map(fn (Product $product): array => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                    'label' => $product->name,
+                    'path' => $product->name,
+                    'depth' => 0,
+                    'is_active' => $product->is_active,
+                ])
+                ->values();
+        }
+
+        return $this->flattenProducts($products, $excludedIds, $activeOnly);
     }
 
     /**

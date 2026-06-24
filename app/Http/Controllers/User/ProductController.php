@@ -15,6 +15,9 @@ class ProductController extends Controller
             'entitlements' => $request->user()
                 ->entitlements()
                 ->current()
+                ->whereHas('product', function ($query) {
+                    $query->whereNull('parent_id');
+                })
                 ->with('product.parent')
                 ->latest()
                 ->paginate(12),
@@ -23,12 +26,12 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): View
     {
-        $product->loadMissing('parent.parent');
+        $product->loadMissing(['parent.parent', 'subProducts']);
 
         $entitlement = $request->user()
             ->entitlements()
             ->current()
-            ->where('product_id', $product->id)
+            ->whereIn('product_id', $product->getAncestorIdsAndSelf())
             ->with('product.parent')
             ->firstOrFail();
 
@@ -47,12 +50,42 @@ class ProductController extends Controller
             ->latest()
             ->get();
 
+        // Calculate entitlement summary metrics
+        $activeLicenseCount = $licenses->filter(function ($license) {
+            return $license->expired_date === null || $license->expired_date->isFuture();
+        })->count();
+
+        $totalDownloadsCount = $request->user()
+            ->downloadLogs()
+            ->whereHas('downloadItem', function ($query) use ($product) {
+                $query->where('product_id', $product->id);
+            })
+            ->count();
+
+        $daysRemaining = null;
+        if ($entitlement->end_date) {
+            $daysRemaining = max(0, now()->diffInDays($entitlement->end_date, false));
+        }
+
+        $lastAccessedDate = $request->user()
+            ->downloadLogs()
+            ->whereHas('downloadItem', function ($query) use ($product) {
+                $query->where('product_id', $product->id);
+            })
+            ->latest('downloaded_at')
+            ->first()
+            ?->downloaded_at;
+
         return view('user.products.show', [
             'entitlement' => $entitlement,
             'product' => $product,
             'breadcrumbs' => $product->getBreadcrumbs(),
             'licenses' => $licenses,
             'downloads' => $downloads,
+            'activeLicenseCount' => $activeLicenseCount,
+            'totalDownloadsCount' => $totalDownloadsCount,
+            'daysRemaining' => $daysRemaining,
+            'lastAccessedDate' => $lastAccessedDate,
         ]);
     }
 }

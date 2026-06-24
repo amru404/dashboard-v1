@@ -96,7 +96,11 @@ class EntitlementController extends Controller
                 'integer',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
             ],
-            'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
+            'product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(fn ($query) => $query->whereNull('parent_id')),
+            ],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'download_expired_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -129,7 +133,7 @@ class EntitlementController extends Controller
                 ->where('role', User::ROLE_USER)
                 ->orderBy('name')
                 ->get(),
-            'productOptions' => $this->productTreeBuilder->options(),
+            'productOptions' => $this->productTreeBuilder->options(rootOnly: true),
             'statuses' => Entitlement::statuses(),
         ];
     }
