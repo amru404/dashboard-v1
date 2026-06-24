@@ -13,13 +13,14 @@ export default {
         extend: {
             colors: {
                 vd: {
-                    // Core palette — Veridium Dark Neon
-                    primary:        '#D4872D',   // amber-orange CTA
-                    secondary:      '#05142F',   // deep navy
-                    tertiary:       '#7A2BFF',   // violet accent
-                    neutral:        '#020307',   // near-black bg
-                    surface:        '#05122B',   // card surface
-                    'on-surface':   '#F7F7FF',   // text on dark
+                    primary:        '#D4872D',   
+                    secondary:      '#05142F',   
+                    tertiary:       '#7A2BFF',   
+                    neutral:        '#020307',   
+                    surface:        '#05122B',   
+                    'on-surface':   '#F7F7FF',   
+                    card:     '#05122b',
+                    'card-hover': '#071b33',
                     text:           '#FFFFFF',
                     muted:          'rgba(247,247,255,0.55)',
                     border:         'rgba(255,255,255,0.07)',
@@ -32,7 +33,7 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['"Rethink Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['"ans"', 'Inter', ...defaultTheme.fontFamily.sans],
             },
             fontSize: {
                 'display': ['50px', { lineHeight: '57.5px', fontWeight: '700' }],

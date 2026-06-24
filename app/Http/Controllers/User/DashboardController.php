@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DownloadItem;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Models\Product;
 
 class DashboardController extends Controller
 {
@@ -15,6 +16,7 @@ class DashboardController extends Controller
 
         return view('user.dashboard', [
             'activeEntitlementCount' => $user->entitlements()->current()->count(),
+            'licenseCount' => $user->licenses()->count(),
             'activeLicenseCount' => $user->licenses()->active()->count(),
             'expiringLicenseCount' => $user->licenses()->expiringSoon()->count(),
             'expiredLicenseCount' => $user->licenses()->expired()->count(),
@@ -25,20 +27,22 @@ class DashboardController extends Controller
                 ->availableForUser($user)
                 ->with('product')
                 ->latest()
-                ->limit(6)
+                ->limit(5)
                 ->get(),
             'ownedProducts' => $user
                 ->entitlements()
                 ->current()
-                ->with('product')
-                ->latest()
-                ->limit(6)
+                ->with('product.parent')
                 ->get()
                 ->pluck('product')
-                ->filter(),
+                ->filter()
+                ->map(fn ($product) => $product->parent ?: $product)
+                ->unique('id')
+                ->values()
+                ->take(5),
             'recentLicenses' => $user
                 ->licenses()
-                ->with(['product', 'licenseType'])
+                ->with(['product', 'subProduct', 'licenseType'])
                 ->latest()
                 ->limit(5)
                 ->get(),

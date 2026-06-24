@@ -3,167 +3,179 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-{{-- ── Page header ── --}}
-<div class="mb-8">
-    <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-2">Customer Portal</p>
-    @auth
-        <h1 class="text-headline-md text-vd-on-surface">Welcome back, {{ auth()->user()->name }}</h1>
-    @endauth
-    <p class="mt-1 text-body-sm text-vd-muted">
-        Your licensed products, active license records, and available downloads — all in one place.
-    </p>
+{{-- ── Hero Welcome Card ── --}}
+<div class="vd-card mb-8 !p-8 md:!p-12 border-[#2a3f5f]">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="flex-1">
+            <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-3">CUSTOMER PORTAL</p>
+            @auth
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Welcome back, {{ auth()->user()->name }}</h1>
+            @endauth
+            <p class="text-base text-gray-300 leading-relaxed mb-6 max-w-2xl">
+                Manage your licenses, download installers, and track your product entitlements — all in one place.
+            </p>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('user.licenses.index') }}">
+                    <x-primary-button>
+                        View Licenses
+                    </x-primary-button>
+                </a>
+                <a href="{{ route('user.downloads.index') }}">
+                    <x-secondary-button>
+                        Downloads
+                    </x-secondary-button>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-{{-- ── Stat cards ── --}}
+{{-- ── Stats Row ── --}}
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
     @php
         $stats = [
-            ['label' => 'Owned Products',    'value' => $activeEntitlementCount, 'color' => 'text-vd-accent-cyan'],
-            ['label' => 'Active Licenses',   'value' => $activeLicenseCount,     'color' => 'text-vd-success'],
-            ['label' => 'Expiring Soon',     'value' => $expiringLicenseCount,   'color' => 'text-vd-warning'],
-            ['label' => 'Expired Licenses',  'value' => $expiredLicenseCount,    'color' => 'text-vd-error'],
+            ['label' => 'Active Licenses',   'value' => $activeLicenseCount,'sublabel' => 'across ' . $activeEntitlementCount . ' products',  'color' => 'text-vd-success', 'icon' => 'far fa-check-circle'],
+            ['label' => 'Downloads Available', 'value' => $downloadCount, 'sublabel' => 'files accessible', 'color' => 'text-vd-primary', 'icon' => 'fa-regular fa-circle-down'],
+            ['label' => 'Device Activations', 'value' => $activeLicenseCount> 0 ? $activeLicenseCount . ' / ' . $licenseCount : '0 / 0', 'sublabel' => 'slots available', 'color' => 'text-vd-success', 'icon' => 'fa-solid fa-power-off'],
+            ['label' => 'License Expired Soon', 'value' => $expiringLicenseCount, 'sublabel' => 'expired licenses ' . $expiredLicenseCount , 'color' => 'text-vd-warning', 'icon' => 'fas fa-triangle-exclamation'],
         ];
     @endphp
 
     @foreach ($stats as $stat)
-        <div class="vd-card">
-            <p class="text-label-sm text-vd-muted">{{ $stat['label'] }}</p>
-            <p class="mt-2 text-headline-sm {{ $stat['color'] }}">{{ $stat['value'] }}</p>
+    <div class="vd-card border-[#2a3f5f]">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">
+                    {{ $stat['label'] }}
+                </p>
+                <p class="text-3xl font-bold mb-1">
+                    {{ $stat['value'] }}
+                </p>
+                <p class="text-sm text-gray-400">
+                    {{ $stat['sublabel'] }}
+                </p>
+            </div>
+
+            <div class="ml-4 {{ $stat['color'] }}">
+               <i class="text-3xl {{ $stat['icon'] }}"></i>
+            </div>
         </div>
+    </div>
     @endforeach
 </div>
 
-{{-- ── Downloads available ── --}}
-<div class="vd-card mb-4">
-    <p class="text-label-sm text-vd-muted">Available Downloads</p>
-    <p class="mt-2 text-headline-sm text-vd-accent-magenta">{{ $downloadCount }}</p>
-</div>
+<div class="grid gap-4 lg:grid-cols-3 mb-8">
 
-{{-- ── Owned Products ── --}}
-<div class="vd-card overflow-hidden !p-0 mb-6">
-    <div class="flex flex-col gap-3 border-b border-vd-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-label-lg text-vd-on-surface">Owned Products</h2>
-            <p class="mt-1 text-body-sm text-vd-muted">Products available through your active entitlements.</p>
-        </div>
-        <a href="{{ route('user.products.index') }}" class="vd-btn-secondary shrink-0">View All</a>
-    </div>
-    <div class="divide-y divide-vd-border">
-        @forelse ($ownedProducts as $product)
-            <div class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-label-md text-vd-on-surface">{{ $product->name }}</p>
-                    <p class="mt-1 text-body-sm text-vd-muted">{{ $product->getCatalogPath() }}</p>
-                </div>
-                <a href="{{ route('user.products.show', $product) }}" class="vd-btn-ghost shrink-0">View</a>
-            </div>
-        @empty
-            <p class="px-6 py-10 text-center text-body-sm text-vd-muted">No products are currently assigned to your account.</p>
-        @endforelse
-    </div>
-</div>
+    <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold text-white mb-4">Your Products</h2>
+        
+        <div class="space-y-4"  >
+            @forelse ($ownedProducts as $product)
+                <div class="vd-card border-[#2a3f5f] !p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-1">{{ $product->name }}</h3>
+                            <p class="text-sm text-gray-400">
+                                Organization: {{ Auth::user()->organization?->name ?? '-' }}
+                                @php
+                                    $productLicenses = $recentLicenses->where('product_id', $product->id);
+                                    $moduleCount = $productLicenses->whereNotNull('sub_product_id')->count();
+                                @endphp
+                                {{ $moduleCount }} {{ Str::plural('module', $moduleCount) }}
+                            </p>
+                        </div>
+                        <x-badge :active="$product->is_active">{{ $product->is_active ? 'Active' : 'Inactive' }}</x-badge>
+                    </div>
 
-{{-- ── Available Downloads ── --}}
-<div class="vd-card overflow-hidden !p-0 mb-6">
-    <div class="flex flex-col gap-3 border-b border-vd-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-label-lg text-vd-on-surface">Available Downloads</h2>
-            <p class="mt-1 text-body-sm text-vd-muted">Private files currently available through your entitlements.</p>
-        </div>
-        <a href="{{ route('user.downloads.index') }}" class="vd-btn-secondary shrink-0">View All</a>
-    </div>
-    <div class="divide-y divide-vd-border">
-        @forelse ($availableDownloads as $downloadItem)
-            <div class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-label-md text-vd-on-surface">{{ $downloadItem->file_name }}</p>
-                    <p class="mt-1 text-body-sm text-vd-muted">
-                        {{ $downloadItem->product->getCatalogPath() }}
-                        @if ($downloadItem->version) &mdash; v{{ $downloadItem->version }} @endif
-                    </p>
+                    @if ($productLicenses->count() > 0)
+                    <?php  $productLicenses = $productLicenses->take(4); ?>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            @foreach ($productLicenses as $license)
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-[#0f1829] text-gray-300 border border-[#2a3f5f]">
+                                    {{ $license->subProduct?->name ?? $license->licenseType?->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                    
+                    <a href="{{ route('user.products.show', $product) }}" class="text-sm font-semibold text-vd-primary hover:text-vd-primary/80 transition-colors">
+                        View Details →
+                    </a>
                 </div>
-                <a href="{{ route('user.downloads.download', $downloadItem) }}" class="vd-btn-primary shrink-0">
-                    Download
+            @empty
+                <div class="vd-card border-[#2a3f5f] !p-12 text-center">
+                    <p class="text-gray-400">No products are currently assigned to your account.</p>
+                </div>
+            @endforelse
+        </div>
+        
+        @if ($ownedProducts->count() > 5)
+            <div class="mt-4 text-center">
+                <a href="{{ route('user.products.index') }}">
+                    <x-primary-button>
+                        View All Products →
+                    </x-primary-button>
                 </a>
             </div>
-        @empty
-            <p class="px-6 py-10 text-center text-body-sm text-vd-muted">No downloads are currently available.</p>
-        @endforelse
+        @endif
     </div>
-</div>
-
-{{-- ── Recent Licenses ── --}}
-<div class="vd-card overflow-hidden !p-0 mb-6">
-    <div class="flex flex-col gap-3 border-b border-vd-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-label-lg text-vd-on-surface">Recent Licenses</h2>
-            <p class="mt-1 text-body-sm text-vd-muted">{{ Auth::user()->organization?->name ?? 'Unassigned account' }}</p>
-        </div>
-        <a href="{{ route('user.licenses.index') }}" class="vd-btn-secondary shrink-0">View All</a>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="vd-table">
-            <thead class="bg-vd-surface">
-                <tr>
-                    <th class="vd-thead">Product</th>
-                    <th class="vd-thead">Type</th>
-                    <th class="vd-thead">Expiry</th>
-                    <th class="px-6 py-4 text-right text-eyebrow text-vd-muted tracking-widest">Action</th>
-                </tr>
-            </thead>
-            <tbody class="vd-tbody">
-                @forelse ($recentLicenses as $license)
-                    <tr>
-                        <td class="px-6 py-4 text-label-md text-vd-on-surface">{{ $license->product->name }}</td>
-                        <td class="px-6 py-4 text-body-sm text-vd-muted">{{ $license->licenseType->name }}</td>
-                        <td class="px-6 py-4 text-body-sm text-vd-muted">{{ $license->expired_date?->format('M j, Y') ?? 'Never' }}</td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{{ route('user.licenses.show', $license) }}" class="vd-btn-ghost">View</a>
-                        </td>
-                    </tr>
+    
+    <div>
+        <h2 class="text-2xl font-bold text-white mb-4">Recent Lisences Activity</h2>
+    
+        <div class="vd-card border-[#2a3f5f] !p-6 mb-6">
+            <div class="space-y-5">
+                @forelse ($recentLicenses as $lisence)
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full" flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                                    </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-white">{{ $lisence->product->name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $lisence->licenseType->name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $lisence->expired_date?->format('M j, Y') ?? 'Never'  }}</p>
+                        </div>
+                    </div>
                 @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-body-sm text-vd-muted">No licenses are assigned to your account.</td>
-                    </tr>
+                    <div class="text-center py-8">
+                        <p class="text-sm text-gray-400">No recent activity</p>
+                    </div>
                 @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
-
-{{-- ── Recent Download History ── --}}
-<div class="vd-card overflow-hidden !p-0">
-    <div class="flex flex-col gap-3 border-b border-vd-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-label-lg text-vd-on-surface">Recent Download History</h2>
-            <p class="mt-1 text-body-sm text-vd-muted">Private file downloads recorded for your account.</p>
+            </div>
         </div>
-        <a href="{{ route('user.downloads.index') }}" class="vd-btn-secondary shrink-0">View Downloads</a>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="vd-table">
-            <thead class="bg-vd-surface">
-                <tr>
-                    <th class="vd-thead">File</th>
-                    <th class="vd-thead">Product</th>
-                    <th class="vd-thead">Downloaded</th>
-                </tr>
-            </thead>
-            <tbody class="vd-tbody">
+
+        {{-- <h2 class="text-2xl font-bold text-white mb-4">Recent Download Activity</h2>
+    
+        <div class="vd-card border-[#2a3f5f] !p-6">
+            <div class="space-y-5">
                 @forelse ($recentDownloadLogs as $log)
-                    <tr>
-                        <td class="px-6 py-4 text-label-md text-vd-on-surface">{{ $log->downloadItem->file_name }}</td>
-                        <td class="px-6 py-4 text-body-sm text-vd-muted">{{ $log->downloadItem->product->name }}</td>
-                        <td class="px-6 py-4 text-body-sm text-vd-muted">{{ $log->downloaded_at?->format('M j, Y H:i') }}</td>
-                    </tr>
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full" flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                                    </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-white">{{ $log->downloadItem->file_name }} downloaded</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $log->downloaded_at->format('Today, H:i') }}</p>
+                        </div>
+                    </div>
                 @empty
-                    <tr>
-                        <td colspan="3" class="px-6 py-10 text-center text-body-sm text-vd-muted">No downloads have been recorded yet.</td>
-                    </tr>
+                    <div class="text-center py-8">
+                        <p class="text-sm text-gray-400">No recent activity</p>
+                    </div>
                 @endforelse
-            </tbody>
-        </table>
+            </div>
+        </div> --}}
+
     </div>
 </div>
 

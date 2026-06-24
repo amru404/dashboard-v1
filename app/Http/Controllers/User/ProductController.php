@@ -23,6 +23,8 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): View
     {
+        $product->loadMissing('parent.parent');
+
         $entitlement = $request->user()
             ->entitlements()
             ->current()

@@ -11,27 +11,25 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-vd-neutral text-vd-on-surface antialiased">
+<body class="bg-vd-neutral text-vd-on-surface antialiased" style="background-image: linear-gradient(75deg, #030b15, #013169);">
 
 <div class="min-h-screen flex flex-col">
 
     {{-- ─────────── Top nav ─────────── --}}
-    <header class="sticky top-0 z-40 border-b border-vd-border bg-vd-surface/90 backdrop-blur-md">
-        <div class="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <header class="sticky top-0 z-40 border-b border-vd-border bg-transparent backdrop-blur-md min-h-[80px]">
+        <div class="mx-auto flex w-full max-w-screen-xl items-center px-4 py-3 sm:px-6 lg:px-8">
 
-            {{-- Brand --}}
+            {{-- Left: logo --}}
             <div class="flex items-center gap-6">
                 <a href="{{ route('user.dashboard') }}" class="flex items-center gap-3 shrink-0">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-md bg-vd-primary/20 border border-vd-primary/40">
-                        <x-application-logo class="h-5 w-5 fill-current text-vd-primary" />
-                    </span>
-                    <span class="hidden sm:block">
-                        <span class="block text-label-lg text-vd-on-surface leading-tight">Customer Area</span>
-                        <span class="block text-[11px] text-vd-muted leading-tight">Customer Portal</span>
+                    <span>
+                        <x-application-logo class="h-2 w-2 fill-current text-vd-primary" />
                     </span>
                 </a>
+            </div>
 
-                {{-- Desktop nav --}}
+            {{-- Center: nav --}}
+            <div class="flex-1 flex justify-center">
                 <nav class="hidden items-center gap-1 md:flex">
                     <a href="{{ route('user.dashboard') }}"
                        class="{{ request()->routeIs('user.dashboard') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
@@ -52,20 +50,24 @@
                 </nav>
             </div>
 
-            {{-- Right side --}}
+            {{-- Right: profile dropdown --}}
             <div class="flex items-center gap-3">
-                <div class="hidden text-right sm:block">
-                    <p class="text-label-sm text-vd-on-surface">{{ Auth::user()->name }}</p>
-                    <p class="text-[11px] text-vd-muted">{{ Auth::user()->organization?->name ?? 'No organization' }}</p>
-                </div>
-                <a href="{{ route('profile.edit') }}" class="vd-btn-ghost hidden sm:inline-flex">Profile</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="button" onclick="this.closest('form').submit()"
-                        class="vd-btn-ghost text-vd-error hover:text-vd-error">
-                        Sign out
-                    </button>
-                </form>
+                <details class="relative">
+                    <summary class="flex items-center gap-3 list-none cursor-pointer">
+                        <div class="hidden text-right sm:block">
+                            <p class="text-label-sm text-vd-on-surface">{{ Auth::user()->name }}</p>
+                            <p class="text-[11px] text-vd-muted">{{ Auth::user()->organization?->name ?? 'No organization' }}</p>
+                        </div>
+                        <svg class="h-4 w-4 text-vd-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="absolute right-0 mt-2 w-44 rounded-md bg-vd-surface shadow-lg z-50">
+                        <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-vd-on-surface hover:bg-vd-border">Profile</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-vd-error hover:bg-vd-border">Sign out</button>
+                        </form>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -91,7 +93,7 @@
     </main>
 
     <footer class="border-t border-vd-border px-6 py-4 text-center text-[11px] text-vd-muted">
-        Customer Area &mdash; Customer Portal
+        Veridium Teknologi Solusi &mdash; Portal
     </footer>
 </div>
 

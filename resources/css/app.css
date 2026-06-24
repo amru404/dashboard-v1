@@ -42,7 +42,7 @@
 
     /* ─── Card ─── */
     .vd-card {
-        @apply rounded-lg bg-vd-surface border border-vd-border;
+        @apply rounded-lg bg-vd-card border border-vd-border shadow-vd hover:bg-vd-card-hover; 
         padding: 22px 22px 20px;
     }
 

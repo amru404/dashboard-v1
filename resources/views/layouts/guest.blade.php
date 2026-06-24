@@ -25,15 +25,12 @@
 
         {{-- Logo --}}
         <a href="/" class="relative z-10 inline-flex items-center gap-3">
-            <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-vd-primary/20 border border-vd-primary/40">
-                <x-application-logo class="h-6 w-6 fill-current text-vd-primary" />
-            </span>
-            <span class="text-label-lg text-vd-on-surface tracking-wide">Customer Area</span>
+            <x-application-logo class="h-6 w-6 fill-current text-vd-primary" />
         </a>
 
-        {{-- Hero copy --}}
+        
         <div class="relative z-10 max-w-md">
-            <p class="text-eyebrow tracking-[0.18em] text-vd-muted uppercase mb-4">License Portal</p>
+            <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-4">License Portal</p>
             <h1 class="text-display text-vd-text leading-tight mb-5">Secure License<br>Distribution</h1>
             <p class="text-body-lg text-vd-muted leading-relaxed">
                 A private software distribution backend for organizations, users, license access, and desktop installer verification.
