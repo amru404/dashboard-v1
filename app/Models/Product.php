@@ -87,6 +87,37 @@ class Product extends Model
         return $count + $this->allChildren->sum(fn (Product $child) => $child->totalLicenseCount());
     }
 
+    public function totalActiveActivations(): int
+    {
+        $productIds = array_merge([$this->id], $this->getAllDescendantIds());
+
+        $licenseIds = \App\Models\License::query()
+            ->whereIn('product_id', $productIds)
+            ->orWhereIn('sub_product_id', $productIds)
+            ->pluck('id')
+            ->all();
+
+        if (empty($licenseIds)) {
+            return 0;
+        }
+
+        return \App\Models\LicenseActivation::query()
+            ->whereIn('license_id', $licenseIds)
+            ->where('status', \App\Models\LicenseActivation::STATUS_ACTIVE)
+            ->count();
+    }
+
+    public function totalMaxActivations(): int
+    {
+        $productIds = array_merge([$this->id], $this->getAllDescendantIds());
+
+        return \App\Models\License::query()
+            ->whereIn('product_id', $productIds)
+            ->orWhereIn('sub_product_id', $productIds)
+            ->whereNotNull('max_activations')
+            ->sum('max_activations');
+    }
+
     /**
      * @return HasMany<License, $this>
      */
