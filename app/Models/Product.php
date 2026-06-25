@@ -69,6 +69,25 @@ class Product extends Model
     }
 
     /**
+     * @return Collection<int, Product>
+     */
+    public function childrenTree(): Collection
+    {
+        return $this->relationLoaded('allChildren') ? $this->allChildren : $this->subProducts;
+    }
+
+    public function totalLicenseCount(): int
+    {
+        $count = $this->relationLoaded('licenses') ? $this->licenses->count() : $this->licenses()->count();
+
+        if (! $this->relationLoaded('allChildren')) {
+            return $count;
+        }
+
+        return $count + $this->allChildren->sum(fn (Product $child) => $child->totalLicenseCount());
+    }
+
+    /**
      * @return HasMany<License, $this>
      */
     public function licenses(): HasMany

@@ -11,54 +11,55 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-vd-neutral text-vd-on-surface antialiased">
+<body class="bg-vd-gradient text-vd-on-surface antialiased">
 
-<div class="min-h-screen grid lg:grid-cols-[1.1fr_0.9fr]">
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-5xl">
+        {{-- ── Centered Authentication Card ── --}}
+        <div class="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-0 rounded-xl overflow-hidden shadow-vd-lg border border-vd-border">
+            
+            {{-- ── Left panel: branding ── --}}
+            <section class="relative hidden lg:flex lg:flex-col lg:justify-between overflow-hidden bg-vd-secondary px-12 py-12">
+                {{-- background glow --}}
+                <div class="absolute inset-0 pointer-events-none vd-hero-glow"></div>
+                {{-- neon lines decoration --}}
+                <div class="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full border border-vd-tertiary/20 pointer-events-none"></div>
+                <div class="absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full border border-vd-accent-cyan/10 pointer-events-none"></div>
 
-    {{-- ── Left panel: branding ── --}}
-    <section class="relative hidden overflow-hidden bg-vd-secondary lg:flex lg:flex-col lg:justify-between px-12 py-12">
-        {{-- background glow --}}
-        <div class="absolute inset-0 pointer-events-none vd-hero-glow"></div>
-        {{-- neon lines decoration --}}
-        <div class="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full border border-vd-tertiary/20 pointer-events-none"></div>
-        <div class="absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full border border-vd-accent-cyan/10 pointer-events-none"></div>
+                {{-- Logo --}}
+                <a href="/" class="relative z-10 inline-flex items-center gap-3">
+                    <x-application-logo class="h-5 w-5 fill-current text-vd-primary" />
+                </a>
 
-        {{-- Logo --}}
-        <a href="/" class="relative z-10 inline-flex items-center gap-3">
-            <x-application-logo class="h-6 w-6 fill-current text-vd-primary" />
-        </a>
+                {{-- Branding content --}}
+                <div class="relative z-10 max-w-sm">
+                    <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-4">License Portal</p>
+                    <h1 class="text-headline-lg text-vd-text leading-tight mb-5">Secure License Distribution</h1>
+                    <p class="text-body-md text-vd-muted leading-relaxed">
+                        A private software distribution backend for organizations and desktop installer verification.
+                    </p>
+                </div>
 
-        
-        <div class="relative z-10 max-w-md">
-            <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-4">License Portal</p>
-            <h1 class="text-display text-vd-text leading-tight mb-5">Secure License<br>Distribution</h1>
-            <p class="text-body-lg text-vd-muted leading-relaxed">
-                A private software distribution backend for organizations, users, license access, and desktop installer verification.
-            </p>
+                {{-- Footnote card --}}
+                <div class="relative z-10 rounded-lg border border-vd-border-strong bg-white/[0.04] p-4 text-body-sm text-vd-muted leading-relaxed">
+                    Built for internal license management with secure access boundaries.
+                </div>
+            </section>
+
+            {{-- ── Right panel: form ── --}}
+            <main class="flex flex-col items-center justify-center px-8 py-12 lg:px-12 bg-vd-surface min-h-[500px] lg:min-h-auto">
+                <div class="w-full max-w-sm">
+                    {{-- Mobile logo --}}
+                    <div class="mb-8 flex items-center gap-3 lg:hidden">
+                        <x-application-logo class="h-6 w-6 fill-current text-vd-primary" />
+                    </div>
+
+                    {{-- Form content --}}
+                    {{ $slot }}
+                </div>
+            </main>
         </div>
-
-        {{-- Footnote card --}}
-        <div class="relative z-10 rounded-lg border border-vd-border-strong bg-white/[0.04] p-5 text-body-sm text-vd-muted leading-relaxed">
-            Built for internal license management with clean access boundaries for admins, customers, and desktop installers.
-        </div>
-    </section>
-
-    {{-- ── Right panel: form ── --}}
-    <main class="flex min-h-screen items-center justify-center px-6 py-12 bg-vd-neutral">
-        <div class="w-full max-w-md">
-            {{-- Mobile logo --}}
-            <div class="mb-8 flex items-center gap-3 lg:hidden">
-                <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-vd-primary/20 border border-vd-primary/40">
-                    <x-application-logo class="h-6 w-6 fill-current text-vd-primary" />
-                </span>
-                <span class="text-label-lg text-vd-on-surface">Customer Area</span>
-            </div>
-
-            <div class="vd-card">
-                {{ $slot }}
-            </div>
-        </div>
-    </main>
+    </div>
 </div>
 
 </body>

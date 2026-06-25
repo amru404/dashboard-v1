@@ -58,21 +58,72 @@ class LicenseController extends Controller
 
     public function generateKey(Request $request): JsonResponse|RedirectResponse
     {
-        $licenseKey = $this->uniqueGeneratedKey();
+        $quantity = (int) $request->input('quantity', 1);
+        $quantity = max(1, min(100, $quantity));
+
+        $keys = collect(range(1, $quantity))
+            ->map(fn () => $this->uniqueGeneratedKey())
+            ->values()
+            ->all();
 
         if ($request->expectsJson()) {
-            return response()->json([
-                'license_key' => $licenseKey,
-            ]);
+            if ($quantity === 1) {
+                return response()->json(['license_key' => $keys[0]]);
+            }
+
+            return response()->json(['license_keys' => $keys]);
         }
 
+        // Fallback for non-AJAX usage (single key)
         return back()
             ->withInput()
-            ->with('generated_license_key', $licenseKey);
+            ->with('generated_license_key', $keys[0]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->has('license_keys')) {
+            $request->merge([
+                'license_count' => count($request->input('license_keys', [])),
+            ]);
+
+            $data = $this->validatedBatchData($request);
+            $this->validateSubProduct($data);
+
+            $data['client_name'] = $this->clientNameForUser((int) $data['user_id']);
+            $licenseCount = (int) $data['license_count'];
+            $providedKeys = $data['license_keys'] ?? null;
+
+            unset($data['license_count'], $data['license_keys']);
+
+            $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys): Collection {
+                return collect(range(1, $licenseCount))
+                    ->map(function ($i) use ($data, $providedKeys): License {
+                        $key = null;
+
+                        if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
+                            $key = (string) $providedKeys[$i - 1];
+                        }
+
+                        if (! $key) {
+                            $key = $this->uniqueGeneratedKey();
+                        }
+
+                        return License::query()->create(array_merge($data, [
+                            'license_key' => $key,
+                        ]));
+                    });
+            });
+
+            return redirect()
+                ->route('admin.licenses.index')
+                ->with('status', $createdLicenses->count().' licenses created.');
+        }
+
+        if (blank($request->input('license_key')) && $request->has('license_keys.0')) {
+            $request->merge(['license_key' => (string) $request->input('license_keys.0')]);
+        }
+
         $data = $this->validatedData($request, licenseKeyRequired: true);
         $this->validateSubProduct($data);
 
@@ -92,16 +143,39 @@ class LicenseController extends Controller
 
         $data['client_name'] = $this->clientNameForUser((int) $data['user_id']);
         $licenseCount = (int) $data['license_count'];
-        unset($data['license_count']);
+        $providedKeys = $data['license_keys'] ?? null;
+        // normalize provided keys
+        if (is_array($providedKeys)) {
+            $providedKeys = array_values($providedKeys);
+        }
 
-        $createdLicenses = DB::transaction(function () use ($data, $licenseCount): Collection {
+        unset($data['license_count'], $data['license_keys']);
+
+        $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys): Collection {
             return collect(range(1, $licenseCount))
-                ->map(function () use ($data): License {
+                ->map(function ($i) use ($data, $providedKeys): License {
+                    $key = null;
+
+                    if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
+                        $key = (string) $providedKeys[$i - 1];
+                    }
+
+                    if (! $key) {
+                        $key = $this->uniqueGeneratedKey();
+                    }
+
                     return License::query()->create(array_merge($data, [
-                        'license_key' => $this->uniqueGeneratedKey(),
+                        'license_key' => $key,
                     ]));
                 });
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'created' => $createdLicenses->count(),
+                'redirect' => route('admin.licenses.index'),
+            ]);
+        }
 
         return redirect()
             ->route('admin.licenses.index')
@@ -271,6 +345,8 @@ class LicenseController extends Controller
             'max_activations' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'expired_date' => ['nullable', 'date'],
             'license_count' => ['required', 'integer', 'min:1', 'max:100'],
+            'license_keys' => ['nullable', 'array'],
+            'license_keys.*' => ['string', 'max:255'],
         ]);
     }
 

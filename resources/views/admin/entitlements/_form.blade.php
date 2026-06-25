@@ -4,7 +4,7 @@
     <div>
         <x-form-label for="user_id" value="Customer user" />
         <div class="relative mt-2">
-            <select id="user_id" name="user_id" class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
+            <select id="user_id" name="user_id" class="block w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
                 <option value="">Select customer</option>
                 @foreach ($users as $user)
                     <option value="{{ $user->id }}" @selected((string) old('user_id', $entitlement->user_id) === (string) $user->id)>
@@ -24,7 +24,7 @@
     <div>
         <x-form-label for="product_id" value="Product" />
         <div class="relative mt-2">
-            <select id="product_id" name="product_id" class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
+            <select id="product_id" name="product_id" class="block w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
                 <option value="">Select product</option>
                 @foreach ($productOptions as $option)
                     <option value="{{ $option['id'] }}" @selected((string) old('product_id', $entitlement->product_id) === (string) $option['id'])>
@@ -65,7 +65,7 @@
     <div>
         <x-form-label for="status" value="Status" />
         <div class="relative mt-2">
-            <select id="status" name="status" class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
+            <select id="status" name="status" class="block w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
                 @foreach ($statuses as $status)
                     <option value="{{ $status }}" @selected(old('status', $entitlement->status ?? 'active') === $status)>{{ ucfirst($status) }}</option>
                 @endforeach
@@ -80,7 +80,7 @@
     </div>
 </div>
 
-<div class="mt-6 rounded-xl border border-vd-border bg-vd-surface p-4">
+<div class="mt-6 rounded-xl border bg-vd-surface p-4">
     <p class="text-sm font-semibold text-madani-deep">Access note</p>
     <p class="mt-2 text-sm leading-6 text-madani-muted">
         This grant controls customer portal product and download access. It does not activate installer devices and does not replace license records.

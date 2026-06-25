@@ -26,7 +26,7 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): View
     {
-        $product->loadMissing(['parent.parent', 'subProducts']);
+        $product->loadMissing(['parent.parent', 'subProducts.allChildren']);
 
         $entitlement = $request->user()
             ->entitlements()
@@ -35,13 +35,15 @@ class ProductController extends Controller
             ->with('product.parent')
             ->firstOrFail();
 
+        $productIds = array_merge([$product->id], $product->getAllDescendantIds());
+
         $licenses = $request->user()
             ->licenses()
-            ->where(function ($query) use ($product): void {
-                $query->where('product_id', $product->id)
-                    ->orWhere('sub_product_id', $product->id);
+            ->where(function ($query) use ($productIds): void {
+                $query->whereIn('product_id', $productIds)
+                    ->orWhereIn('sub_product_id', $productIds);
             })
-            ->with(['licenseType', 'activations'])
+            ->with(['licenseType', 'activations', 'product', 'subProduct'])
             ->latest()
             ->get();
 

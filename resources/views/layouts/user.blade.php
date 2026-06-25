@@ -33,15 +33,15 @@
                 <nav class="hidden items-center gap-1 md:flex">
                     <a href="{{ route('user.dashboard') }}"
                        class="{{ request()->routeIs('user.dashboard') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
-                        Dashboard
+                        Overview
                     </a>
                     <a href="{{ route('user.products.index') }}"
                        class="{{ request()->routeIs('user.products.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
-                        Products
+                        Software Products
                     </a>
                     <a href="{{ route('user.licenses.index') }}"
                        class="{{ request()->routeIs('user.licenses.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
-                        Licenses
+                        License Keys
                     </a>
                     <a href="{{ route('user.downloads.index') }}"
                        class="{{ request()->routeIs('user.downloads.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">

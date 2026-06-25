@@ -4,18 +4,45 @@
 
 @section('content')
 
+@php
+    $layout = request('layout', 'grid');
+@endphp
+
 {{-- ── Page Header ── --}}
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-white mb-2">Downloads</h1>
-    <p class="text-base text-gray-300">
-        Files available through your active product entitlements. Downloads are streamed securely.
-    </p>
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-white mb-2">Downloads</h1>
+            <p class="text-base text-gray-300">
+                Files available through your active product entitlements. Downloads are streamed securely.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2 rounded-full border border-white/10 bg-[#0f1829] p-1 text-sm text-gray-300">
+            <span class="hidden sm:inline-flex px-3">View</span>
+            <a href="{{ route('user.downloads.index', array_merge(request()->except('page'), ['layout' => 'grid'])) }}"
+               class="inline-flex items-center justify-center rounded-full px-3 py-2 transition {{ $layout === 'grid' ? 'bg-vd-primary text-white' : 'text-gray-300 hover:bg-white/5' }}"
+               aria-label="Grid layout">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" />
+                </svg>
+            </a>
+            <a href="{{ route('user.downloads.index', array_merge(request()->except('page'), ['layout' => 'list'])) }}"
+               class="inline-flex items-center justify-center rounded-full px-3 py-2 transition {{ $layout === 'list' ? 'bg-vd-primary text-white' : 'text-gray-300 hover:bg-white/5' }}"
+               aria-label="List layout">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16M4 19h16" />
+                </svg>
+            </a>
+        </div>
+    </div>
 </div>
 
 {{-- ── Filters Card ── --}}
 <div class="vd-card  border-[#2a3f5f] !p-6 mb-6">
     <form method="GET" action="{{ route('user.downloads.index') }}"
           class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
+        <input type="hidden" name="layout" value="{{ $layout }}" />
         <div>
             <label for="search" class="block text-sm font-semibold text-white mb-2">Search</label>
             <input type="text" 
@@ -50,11 +77,12 @@
 </div>
 
 {{-- ── Download Cards Grid ── --}}
-<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+<div class="{{ $layout === 'list' ? 'space-y-5' : 'grid gap-5 md:grid-cols-2 xl:grid-cols-3' }}">
     @forelse ($downloadItems as $downloadItem)
         <x-download-card
             :download-item="$downloadItem"
-            :download-url="route('user.downloads.download', $downloadItem)" />
+            :download-url="route('user.downloads.download', $downloadItem)"
+            :layout="$layout" />
     @empty
         <div class="vd-card  border-[#2a3f5f] md:col-span-2 xl:col-span-3 !p-12 text-center">
             <svg class="mx-auto mb-4 h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

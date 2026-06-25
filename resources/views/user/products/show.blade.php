@@ -85,52 +85,25 @@
             @endif
         </div>
 
-        {{-- License Keys Section --}}
+        {{-- License Keys Tree Section --}}
         <div class="vd-card border-[#2a3f5f] !p-6">
-            <h2 class="text-xl font-bold text-white mb-5">License Keys</h2>
-            
-            @forelse ($licenses as $license)
-                <div 
-                    class="mb-4 last:mb-0 rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4"
-                    x-data="{ show: false }"
-                >
-                    <div class="flex items-start justify-between gap-4 mb-3">
-                        <div class="flex-1">
-                            <h3 class="text-sm font-semibold text-white mb-1">{{ $license->licenseType->name }}</h3>
-                            <p class="text-xs text-gray-400">
-                                Expires: {{ $license->expired_date?->format('M j, Y') ?? 'Never' }}
-                            </p>
-                        </div>
-                        <span class="text-xs text-gray-400">
-                            {{ $license->activations->count() }} / {{ $license->max_activations ?? '∞' }} activations
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 font-mono text-sm bg-black/30 rounded px-3 py-2 border border-[#2a3f5f]">
-                            <span x-show="!show" class="text-gray-400">••••-••••-••••-••••</span>
-                            <span x-show="show" class="text-white" x-text="'{{ $license->license_key }}'"></span>
-                        </div>
-                        <button 
-                            @click="show = !show"
-                            class="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 transition-colors text-gray-300 hover:text-white"
-                            :title="show ? 'Hide key' : 'Show key'"
-                        >
-                            <svg x-show="!show" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <svg x-show="show" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            @empty
+            <h2 class="text-xl font-bold text-white mb-5">Sub Product</h2>
+
+            @php
+                $licensesByProduct = $licenses->groupBy(fn ($license) => $license->sub_product_id ?? $license->product_id);
+            @endphp
+
+            @if ($product->subProducts->isEmpty() && empty($licensesByProduct[$product->id] ?? []))
                 <div class="text-center py-6 text-sm text-gray-400">
                     No license keys available for this product.
                 </div>
-            @endforelse
+            @else
+                @include('user.products._license-tree-node', [
+                    'product' => $product,
+                'licensesByProduct' => $licensesByProduct,
+                    'depth' => 0,
+                ])
+            @endif
         </div>
     </div>
 

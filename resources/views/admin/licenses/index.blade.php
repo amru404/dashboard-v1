@@ -14,11 +14,11 @@
             </p>
         </div>
         <div class="flex gap-2 shrink-0">
-            <a href="{{ route('admin.licenses.batch-create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold text-sm border border-white/20 transition-colors">
+            {{-- <a href="{{ route('admin.licenses.batch-create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold text-sm border border-white/20 transition-colors">
                 Batch Issue
-            </a>
+            </a> --}}
             <a href="{{ route('admin.licenses.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                Issue License
+                New License
             </a>
         </div>
     </div>

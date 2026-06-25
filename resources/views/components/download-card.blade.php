@@ -2,6 +2,7 @@
     'downloadItem',
     'downloadUrl',
     'compact' => false,
+    'layout' => 'grid',
 ])
 
 @if ($compact)
@@ -20,8 +21,8 @@
         </a>
     </div>
 @else
-    <div {{ $attributes->merge(['class' => 'vd-card  border-[#2a3f5f] !p-6 flex flex-col']) }}>
-        <div class="flex items-start justify-between mb-4">
+    <div {{ $attributes->merge(['class' => 'vd-card border-[#2a3f5f] !p-6 '.($layout === 'list' ? 'flex flex-col' : 'flex flex-col')]) }}>
+        <div class="flex flex-col gap-4 {{ $layout === 'list' ? 'md:flex-row md:items-start' : '' }} justify-between mb-4">
             <div class="flex-1">
                 <h3 class="text-xl font-bold text-white mb-1">{{ $downloadItem->file_name }}</h3>
                 <p class="text-xs tracking-[0.14em] text-vd-primary uppercase font-semibold">{{ $downloadItem->product->name }}</p>
@@ -43,7 +44,7 @@
 
         <p class="text-sm text-gray-400 mb-5">{{ $downloadItem->product->getCatalogPath() }}</p>
 
-        <dl class="flex-1 space-y-3 text-sm">
+        <dl class="flex-1 space-y-3 text-sm {{ $layout === 'list' ? 'grid gap-3 sm:grid-cols-2' : '' }}">
             <div class="flex justify-between gap-4">
                 <dt class="text-gray-400">Version</dt>
                 <dd class="text-white font-medium">{{ $downloadItem->version ?? '—' }}</dd>
@@ -62,7 +63,7 @@
             </div>
         </dl>
 
-        <div class="mt-6 pt-4 border-t border-[#2a3f5f]">
+        <div class="mt-6 pt-4 border-t border-[#2a3f5f] {{ $layout === 'list' ? 'sm:mt-0 sm:pt-0 sm:border-t-0' : '' }}">
             <a href="{{ $downloadUrl }}" class="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
                 <x-primary-button>
                     <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
