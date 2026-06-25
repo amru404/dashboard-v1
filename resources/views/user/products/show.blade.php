@@ -93,24 +93,63 @@
         @if ($product->subProducts->isNotEmpty())
             {{-- Sub Products Section --}}
             <div class="vd-card border-[#2a3f5f] !p-6">
-                <h2 class="text-xl font-bold text-white mb-5">Sub Products</h2>
+                <div class="flex items-start justify-between gap-4 mb-5">
+                    <h2 class="text-xl font-bold text-white">Sub Products</h2>
+                    <div class="text-sm text-gray-400">
+                        <span id="subProductCount">{{ $product->subProducts->count() }}</span> 
+                        <span id="subProductLabel">{{ $product->subProducts->count() === 1 ? 'item' : 'items' }}</span>
+                    </div>
+                </div>
+
+                {{-- Search & Filter Bar --}}
+                <div class="grid gap-3 sm:grid-cols-[1fr_auto] mb-4">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="subProductSearch"
+                            placeholder="Search sub-products by name or code..."
+                            class="w-full px-4 py-2.5 pl-10 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm" />
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    
+                    <select 
+                        id="subProductStatus" 
+                        class="px-4 py-2.5 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm min-w-[140px]">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
                 
-                <div class="space-y-4">
+                <div id="subProductsContainer" class="space-y-4">
                     @foreach ($product->subProducts as $subProduct)
-                        <div class="rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4">
+                        <div class="sub-product-item rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4" 
+                             data-name="{{ strtolower($subProduct->name) }}" 
+                             data-code="{{ strtolower($subProduct->code) }}"
+                             data-status="{{ $subProduct->is_active ? 'active' : 'inactive' }}">
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="flex-1">
                                     <h3 class="text-base font-bold text-white mb-1">{{ $subProduct->name }}</h3>
                                     <p class="text-xs text-gray-400 font-mono">{{ $subProduct->code }}</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                     <x-badge :active="$entitlement->product->is_active">
-                                        {{ $entitlement->product->is_active ? 'Active' : 'Inactive' }}
+                                     <x-badge :active="$subProduct->is_active">
+                                        {{ $subProduct->is_active ? 'Active' : 'Inactive' }}
                                     </x-badge>
                                 </div>
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                {{-- No Results Message --}}
+                <div id="noSubProductResults" class="hidden text-center py-8">
+                    <svg class="mx-auto mb-3 h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p class="text-sm text-gray-400">No sub-products found</p>
                 </div>
             </div>
         @endif
@@ -155,3 +194,5 @@
 </div>
 
 @endsection
+
+@vite('resources/js/sub-product-filter.js')

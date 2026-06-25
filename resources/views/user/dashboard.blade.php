@@ -9,12 +9,12 @@
 <div class="vd-card mb-8 !p-8 md:!p-12 border-[#2a3f5f]">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div class="flex-1">
-            <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-3">CUSTOMER PORTAL</p>
+            <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-3">SOFTWARE ACCESS</p>
             @auth
                 <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Welcome back, {{ auth()->user()->name }}</h1>
             @endauth
             <p class="text-base text-gray-300 leading-relaxed mb-6 max-w-2xl">
-                Manage your licenses, download installers, and track your product entitlements — all in one place.
+                Manage software access across teams — without the complexity.
             </p>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('user.licenses.index') }}">
@@ -79,24 +79,31 @@
                             <h3 class="text-xl font-bold text-white mb-1">{{ $product->name }}</h3>
                             <p class="text-sm text-gray-400">
                                 Organization: {{ Auth::user()->organization?->name ?? '-' }}
-                                @php
-                                    $productLicenses = $recentLicenses->where('product_id', $product->id);
-                                    $moduleCount = $productLicenses->whereNotNull('sub_product_id')->count();
-                                @endphp
-                                {{ $moduleCount }} {{ Str::plural('module', $moduleCount) }}
                             </p>
                         </div>
                         <x-badge :active="$product->is_active">{{ $product->is_active ? 'Active' : 'Inactive' }}</x-badge>
                     </div>
-
-                    @if ($productLicenses->count() > 0)
-                    <?php  $productLicenses = $productLicenses->take(4); ?>
+                    
+                    @php
+                        $subProducts = $product->subProducts ?? collect();
+                        $totalSubProducts = $subProducts->count();
+                        $displaySubProducts = $subProducts->take(4);
+                        $remainingCount = $totalSubProducts - 4;
+                    @endphp
+                    
+                    @if ($totalSubProducts > 0)
                         <div class="flex flex-wrap gap-2 mb-4">
-                            @foreach ($productLicenses as $license)
+                            @foreach ($displaySubProducts as $subProduct)
                                 <span class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-[#0f1829] text-gray-300 border border-[#2a3f5f]">
-                                    {{ $license->subProduct?->name ?? $license->licenseType?->name }}
+                                    {{ $subProduct->name }}
                                 </span>
                             @endforeach
+                            
+                            @if ($remainingCount > 0)
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-[#0f1829] text-gray-400 border border-[#2a3f5f]">
+                                    +{{ $remainingCount }} more...
+                                </span>
+                            @endif
                         </div>
                     @endif
                     
@@ -150,33 +157,6 @@
                 @endforelse
             </div>
         </div>
-
-        {{-- <h2 class="text-2xl font-bold text-white mb-4">Recent Download Activity</h2>
-    
-        <div class="vd-card border-[#2a3f5f] !p-6">
-            <div class="space-y-5">
-                @forelse ($recentDownloadLogs as $log)
-                    <div class="flex gap-4">
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 rounded-full" flex items-center justify-center">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
-                                    </svg>
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-white">{{ $log->downloadItem->file_name }} downloaded</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ $log->downloaded_at->format('Today, H:i') }}</p>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-8">
-                        <p class="text-sm text-gray-400">No recent activity</p>
-                    </div>
-                @endforelse
-            </div>
-        </div> --}}
-
     </div>
 </div>
 

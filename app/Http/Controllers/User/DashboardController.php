@@ -32,7 +32,7 @@ class DashboardController extends Controller
             'ownedProducts' => $user
                 ->entitlements()
                 ->current()
-                ->with('product.parent')
+                ->with(['product.parent', 'product.subProducts'])
                 ->get()
                 ->pluck('product')
                 ->filter()

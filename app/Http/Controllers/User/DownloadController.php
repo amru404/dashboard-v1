@@ -14,12 +14,38 @@ class DownloadController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('user.downloads.index', [
-            'downloadItems' => DownloadItem::query()
-                ->with('product')
+        $filters = $request->validate([
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
+            'search' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $downloadItems = DownloadItem::query()
+            ->with('product')
+            ->availableForUser($request->user())
+            ->when($filters['product_id'] ?? null, fn ($query, $productId) => $query->where('product_id', $productId))
+            ->when($filters['search'] ?? null, function ($query, $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('product', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhere('file_name', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        $filterProducts = \App\Models\Product::query()
+            ->whereIn('id', DownloadItem::query()
                 ->availableForUser($request->user())
-                ->latest()
-                ->paginate(12),
+                ->pluck('product_id')
+                ->unique()
+            )
+            ->orderBy('name')
+            ->get();
+
+        return view('user.downloads.index', [
+            'downloadItems' => $downloadItems,
+            'filters' => $filters,
+            'filterProducts' => $filterProducts,
         ]);
     }
 

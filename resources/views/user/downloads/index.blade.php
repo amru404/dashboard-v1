@@ -37,6 +37,7 @@
     </div>
 
     {{-- Search & Filter --}}
+    <x-card>
     <form method="GET" action="{{ route('user.downloads.index') }}" id="filterForm" class="grid gap-3 sm:grid-cols-[1fr_auto]">
         <input type="hidden" name="layout" value="{{ $layout }}" />
         
@@ -44,8 +45,8 @@
             <input type="text" 
                    id="search" 
                    name="search"
-                   value="{{ request('search') }}"
-                   placeholder="Search files..."
+                   value="{{ $filters['search'] ?? '' }}"
+                   placeholder="Search files or products..."
                    class="w-full px-4 py-2.5 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm" />
             <div id="searchSpinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
                 <svg class="animate-spin h-4 w-4 text-vd-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -59,13 +60,14 @@
                 name="product_id" 
                 class="px-4 py-2.5 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm">
             <option value="">All products</option>
-            @foreach ($filterProducts ?? [] as $fp)
-                <option value="{{ $fp->id }}" @selected(request('product_id') == $fp->id)>
+            @foreach ($filterProducts as $fp)
+                <option value="{{ $fp->id }}" @selected(($filters['product_id'] ?? null) == $fp->id)>
                     {{ $fp->name }}
                 </option>
             @endforeach
         </select>
     </form>
+</x-card>
 </div>
 
 {{-- ── Stats Cards ── --}}
@@ -165,7 +167,7 @@
 {{-- ── Pagination ── --}}
 @if ($downloadItems->hasPages())
     <div class="mt-8">
-        {{ $downloadItems->appends(['layout' => $layout, 'search' => request('search'), 'product_id' => request('product_id')])->links() }}
+        {{ $downloadItems->links() }}
     </div>
 @endif
 

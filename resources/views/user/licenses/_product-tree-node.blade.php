@@ -21,8 +21,12 @@
             <div class="space-y-3 pt-3 border-t border-[#2a3f5f]">
                 @foreach ($product->licenses as $license)
                     <div 
-                        class="rounded-lg border border-[#2a3f5f] bg-black/20 p-3"
+                        class="license-item rounded-lg border border-[#2a3f5f] bg-black/20 p-3"
                         x-data="{ show: false }"
+                        data-license-key="{{ strtolower($license->license_key) }}"
+                        data-license-status="{{ $license->isExpired() ? 'expired' : 'active' }}"
+                        data-license-product="{{ strtolower($product->parent ? $product->parent->name : $product->name) }}"
+                        data-license-subproduct="{{ strtolower($product->name) }}"
                     >
                         <div class="grid gap-3 lg:grid-cols-[2fr_1fr_1fr_auto] items-center">
                             {{-- License Key --}}
