@@ -59,7 +59,7 @@
             </div>
 
             <div class="ml-4 {{ $stat['color'] }}">
-               <i class="text-3xl {{ $stat['icon'] }}"></i>
+               <i class="text-xl {{ $stat['icon'] }}"></i>
             </div>
         </div>
     </div>

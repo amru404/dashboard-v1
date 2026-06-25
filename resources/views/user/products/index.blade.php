@@ -32,10 +32,6 @@
 
             <dl class="flex-1 space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                    <dt class="text-gray-400">Parent</dt>
-                    <dd class="text-white font-medium">{{ $entitlement->product->parent?->name ?? 'Root' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
                     <dt class="text-gray-400">Access ends</dt>
                     <dd class="text-white font-medium">{{ $entitlement->end_date?->format('M j, Y') ?? 'Open ended' }}</dd>
                 </div>

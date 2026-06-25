@@ -26,12 +26,12 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): View
     {
-        $product->loadMissing(['parent.parent', 'subProducts.allChildren']);
+        $product->loadMissing(['parent.parent', 'subProducts.licenses.licenseType', 'subProducts.licenses.activations']);
 
         $entitlement = $request->user()
             ->entitlements()
             ->current()
-            ->whereIn('product_id', $product->getAncestorIdsAndSelf())
+            ->where('product_id', $product->id)
             ->with('product.parent')
             ->firstOrFail();
 
