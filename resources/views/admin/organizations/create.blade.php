@@ -1,13 +1,22 @@
 @extends('layouts.admin')
 
-@section('title', 'Create Organization')
+@section('title', 'New Organization')
 
 @section('content')
-    <x-page-header title="Create organization" subtitle="Add a new organization for account assignment." />
+    {{-- ── Page Header ── --}}
+    <div class="mb-8">
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-white mb-2">New organization</h1>
+            <p class="text-base text-gray-300">
+                Add a new organization for account assignment.
+            </p>
+        </div>
+    </div>
 
-    <x-card>
+    {{-- ── Form ── --}}
+    <div class="vd-card border-[#2a3f5f]">
         <form method="POST" action="{{ route('admin.organizations.store') }}">
-            @include('admin.organizations._form', ['submitLabel' => 'Create organization'])
+            @include('admin.organizations._form', ['submitLabel' => 'New organization'])
         </form>
-    </x-card>
+    </div>
 @endsection

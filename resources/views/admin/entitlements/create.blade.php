@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Grant Entitlement')
+@section('title', 'New Entitlement')
 
 @section('content')
     <x-page-header title="Grant entitlement" subtitle="Give a customer access to a product and its controlled downloads." />

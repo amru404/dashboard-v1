@@ -99,16 +99,16 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center gap-2">
-                                <a href="{{ route('admin.quotations.show', $quotation) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 font-semibold text-xs border border-gray-500/30 transition-colors">
+                                <a href="{{ route('admin.quotations.show', $quotation) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">
                                     View
                                 </a>
-                                <a href="{{ route('admin.quotations.edit', $quotation) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-xs border border-vd-primary/30 transition-colors">
+                                <a href="{{ route('admin.quotations.edit', $quotation) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">
                                     Edit
                                 </a>
                                 <form method="POST" action="{{ route('admin.quotations.destroy', $quotation) }}" onsubmit="return confirm('Delete this quotation?')" class="inline-block">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold text-xs border border-red-500/30 transition-colors">
+                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-vd-error hover:text-vd-error transition-colors">
                                         Delete
                                     </button>
                                 </form>

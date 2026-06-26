@@ -6,20 +6,20 @@
 
 <div class="grid gap-5 sm:grid-cols-2">
     <div>
-        <x-form-label for="name" value="Name" />
-        <x-form-input id="name" name="name" value="{{ old('name', $user->name) }}" required class="mt-2" />
+        <label for="name" class="block text-sm font-semibold text-white mb-2">Name</label>
+        <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required class="w-full px-4 py-2.5 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-vd-primary focus:ring-1 focus:ring-vd-primary/20" />
         <x-input-error :messages="$errors->get('name')" class="mt-2" />
     </div>
 
     <div>
-        <x-form-label for="email" value="Email" />
-        <x-form-input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required class="mt-2" />
+        <label for="email" class="block text-sm font-semibold text-white mb-2">Email</label>
+        <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required class="w-full px-4 py-2.5 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-vd-primary focus:ring-1 focus:ring-vd-primary/20" />
         <x-input-error :messages="$errors->get('email')" class="mt-2" />
     </div>
 
     <div>
-        <x-form-label for="organization_id" value="Organization" />
-        <select id="organization_id" name="organization_id" class="madani-input mt-2">
+        <label for="organization_id" class="block text-sm font-semibold text-white mb-2">Organization</label>
+        <select id="organization_id" name="organization_id" class="w-full px-4 py-2.5 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white focus:outline-none focus:border-vd-primary focus:ring-1 focus:ring-vd-primary/20">
             <option value="">Unassigned</option>
             @foreach ($organizations as $organization)
                 <option value="{{ $organization->id }}" @selected((string) old('organization_id', $user->organization_id) === (string) $organization->id)>
@@ -27,13 +27,13 @@
                 </option>
             @endforeach
         </select>
-        <p class="mt-2 text-xs text-madani-muted">Required for customer users. Admin users may use the system organization.</p>
+        <p class="mt-2 text-xs text-gray-400">Required for customer users. Admin users may use the system organization.</p>
         <x-input-error :messages="$errors->get('organization_id')" class="mt-2" />
     </div>
 
     <div>
-        <x-form-label for="role" value="Role" />
-        <select id="role" name="role" class="madani-input mt-2" required>
+        <label for="role" class="block text-sm font-semibold text-white mb-2">Role</label>
+        <select id="role" name="role" required class="w-full px-4 py-2.5 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white focus:outline-none focus:border-vd-primary focus:ring-1 focus:ring-vd-primary/20">
             @foreach ($roles as $role)
                 <option value="{{ $role }}" @selected(old('role', $user->role) === $role)>{{ ucfirst($role) }}</option>
             @endforeach
@@ -41,18 +41,18 @@
         <x-input-error :messages="$errors->get('role')" class="mt-2" />
     </div>
 
-    <div class="rounded-xl border border-madani-border bg-madani-ghost p-4 sm:col-span-2">
-        <x-form-label for="password" :value="$user->exists ? 'New password' : 'Temporary password'" />
+    <div class="sm:col-span-2 rounded-lg border border-[#2a3f5f] bg-[#0f1829]/50 p-4">
+        <label for="password" class="block text-sm font-semibold text-white mb-2">{{ $user->exists ? 'New password' : 'Temporary password' }}</label>
         <input
             id="password"
             name="password"
             type="password"
-            class="madani-input mt-2"
+            class="w-full px-4 py-2.5 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-vd-primary focus:ring-1 focus:ring-vd-primary/20"
             autocomplete="new-password"
             placeholder="{{ $user->exists ? 'Leave blank to keep current password' : 'Set a temporary password' }}"
             @if (! $user->exists) required @endif
         >
-        <p class="mt-2 text-xs text-madani-muted">
+        <p class="mt-2 text-xs text-gray-400">
             {{ $user->exists ? 'Only enter a value if you want to change this user password.' : 'Required for new users. Minimum 8 characters.' }}
         </p>
         <x-input-error :messages="$errors->get('password')" class="mt-2" />
@@ -69,18 +69,22 @@
         type="checkbox"
         name="is_active"
         value="1"
-        class="rounded border-gray-300 text-madani-green shadow-sm focus:ring-madani-green"
+        class="rounded border-gray-600 bg-[#0f1829] text-vd-primary shadow-sm focus:ring-vd-primary/20"
         @checked(old('is_active', $user->is_active))
         @disabled($isEditingSelf)
     >
-    <span class="text-sm font-semibold text-madani-deep">Active account</span>
+    <span class="text-sm font-semibold text-white">Active account</span>
 </label>
 
 @if ($isEditingSelf)
-    <p class="mt-2 text-sm text-madani-muted">Your own account will remain active to prevent lockout.</p>
+    <p class="mt-2 text-sm text-gray-400">Your own account will remain active to prevent lockout.</p>
 @endif
 
 <div class="mt-8 flex flex-wrap gap-3">
-    <x-button>{{ $submitLabel }}</x-button>
-    <x-button variant="secondary" :href="route('admin.users.index')">Cancel</x-button>
+    <button type="submit" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
+        {{ $submitLabel }}
+    </button>
+    <a href="{{ route('admin.users.index') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg text-gray-300 hover:text-white font-semibold text-sm transition-colors">
+        Cancel
+    </a>
 </div>

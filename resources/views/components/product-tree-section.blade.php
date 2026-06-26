@@ -37,9 +37,8 @@
             <div>
                 <label for="product_level_filter" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Level</label>
                 <select id="product_level_filter" class="w-full px-3 py-2 bg-[#0f1829] border border-[#2a3f5f] rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-vd-primary focus:border-transparent" x-model="level">
-                    <option value="all">All levels</option>
-                    <option value="top">Top-level only</option>
-                    <option value="child">Child products</option>
+                    <option value="all">All Product</option>
+                    <option value="top">Master Product</option>
                 </select>
             </div>
             <div class="flex flex-wrap items-end gap-2">

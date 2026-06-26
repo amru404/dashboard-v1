@@ -15,7 +15,7 @@
         </div>
         <div class="shrink-0">
             <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                Create User
+                New User
             </a>
         </div>
     </div>

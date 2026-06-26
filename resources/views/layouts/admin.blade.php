@@ -145,7 +145,7 @@
 
     {{-- ─────────── Footer ─────────── --}}
     <footer class="border-t border-vd-border px-6 py-4 text-center text-[11px] text-vd-muted">
-        Customer Area &mdash; Admin Console
+        Veridium Teknologi Solusi &mdash; Portal
     </footer>
 </div>
 

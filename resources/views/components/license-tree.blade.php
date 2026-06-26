@@ -110,7 +110,7 @@
 
                                     {{-- Action --}}
                                     <div>
-                                        <a href="{{ route('user.licenses.show', $license) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-xs border border-vd-primary/30 transition-colors">
+                                        <a href="{{ route('user.licenses.show', $license) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">
                                             Details →
                                         </a>
                                     </div>

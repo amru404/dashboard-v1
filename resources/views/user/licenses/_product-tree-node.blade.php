@@ -77,11 +77,11 @@
                             <div>
                                 <p class="text-xs text-gray-400 mb-2">Status</p>
                                 @if ($license->isExpired())
-                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
                                         Expired
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
                                         Active
                                     </span>
                                 @endif
@@ -90,14 +90,14 @@
                             {{-- Activations --}}
                             <div>
                                 <p class="text-xs text-gray-400 mb-2">Activations</p>
-                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
                                     {{ $license->activeActivationCount() }} / {{ $license->max_activations ?? '∞' }}
                                 </span>
                             </div>
 
                             {{-- Action --}}
                             <div>
-                                <a href="{{ route('user.licenses.show', $license) }}" class="inline-flex items-center px-3 py-1.5 rounded bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-xs border border-vd-primary/30 transition-colors whitespace-nowrap">
+                                <a href="{{ route('user.licenses.show', $license) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">
                                     Details
                                 </a>
                             </div>
