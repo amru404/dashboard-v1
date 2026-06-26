@@ -85,10 +85,10 @@
 </div>
 
 {{-- ── Two Column Layout ── --}}
-<div class="grid gap-6 lg:grid-cols-3">
+<div class="grid gap-6 lg:grid-cols-[1fr_320px]">
 
     {{-- Left: Sub Products & License Keys ── --}}
-    <div class="lg:col-span-2 space-y-6">
+    <div class="space-y-6">
         
         @if ($product->subProducts->isNotEmpty())
             {{-- Sub Products Section --}}
@@ -123,25 +123,8 @@
                     </select>
                 </div>
                 
-                <div id="subProductsContainer" class="space-y-4">
-                    @foreach ($product->subProducts as $subProduct)
-                        <div class="sub-product-item rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4" 
-                             data-name="{{ strtolower($subProduct->name) }}" 
-                             data-code="{{ strtolower($subProduct->code) }}"
-                             data-status="{{ $subProduct->is_active ? 'active' : 'inactive' }}">
-                            <div class="flex items-start justify-between gap-3 mb-3">
-                                <div class="flex-1">
-                                    <h3 class="text-base font-bold text-white mb-1">{{ $subProduct->name }}</h3>
-                                    <p class="text-xs text-gray-400 font-mono">{{ $subProduct->code }}</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                     <x-badge :active="$subProduct->is_active">
-                                        {{ $subProduct->is_active ? 'Active' : 'Inactive' }}
-                                    </x-badge>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                <div id="subProductsContainer">
+                    <x-product-sub-tree :subProducts="$product->subProducts" />
                 </div>
 
                 {{-- No Results Message --}}
@@ -155,18 +138,17 @@
         @endif
         </div>
 
-    {{-- Right: Downloads ── --}}
+    {{-- Right: Available Downloads ── --}}
     <div class="lg:col-span-1">
-        <div class="vd-card border-[#2a3f5f] !p-6">
+        <div class="vd-card border-[#2a3f5f] !p-6 sticky top-8">
             <h2 class="text-lg font-bold text-white mb-5">Available Downloads</h2>
-            <div class="space-y-3">
+            <div class="space-y-3 max-h-[600px] overflow-y-auto">
                 @forelse ($downloads as $download)
                     <div class="rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4 hover:bg-[#0f1829]/60 transition-colors">
                         <div class="mb-3">
-                            <h3 class="text-sm font-semibold text-white mb-1">{{ $download->file_name }}</h3>
-                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <h3 class="text-sm font-semibold text-white mb-1 truncate" title="{{ $download->file_name }}">{{ $download->file_name }}</h3>
+                            <div class="flex flex-col gap-1 text-xs text-gray-400">
                                 <span>v{{ $download->version ?? 'N/A' }}</span>
-                                <span>•</span>
                                 <span>{{ number_format($download->file_size / 1024 / 1024, 2) }} MB</span>
                             </div>
                         </div>

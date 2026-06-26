@@ -49,6 +49,27 @@
                        class="{{ request()->routeIs('user.downloads.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
                         Downloads
                     </a>
+                    <x-dropdown align="left" width="w-52" contentClasses="bg-vd-surface border border-vd-border rounded-lg py-1 shadow-vd-lg" :open-on-hover="true">
+                        <x-slot name="trigger">
+                            <button type="button"
+                                class="{{ request()->routeIs('user.invoices.*') || request()->routeIs('user.quotations.*') ? 'vd-nav-link-active' : 'vd-nav-link' }} cursor-pointer gap-1">
+                                Documents
+                                <svg class="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <a href="{{ route('user.invoices.index') }}"
+                               class="flex items-center px-4 py-2.5 text-body-sm transition
+                                      {{ request()->routeIs('user.invoices.*') ? 'bg-vd-primary/15 text-vd-primary font-semibold' : 'text-vd-muted hover:bg-white/5 hover:text-vd-on-surface' }}">
+                                Invoices
+                            </a>
+                            <a href="{{ route('user.quotations.index') }}"
+                               class="flex items-center px-4 py-2.5 text-body-sm transition
+                                      {{ request()->routeIs('user.quotations.*') ? 'bg-vd-primary/15 text-vd-primary font-semibold' : 'text-vd-muted hover:bg-white/5 hover:text-vd-on-surface' }}">
+                                Quotations
+                            </a>
+                        </x-slot>
+                    </x-dropdown>
                 </nav>
             </div>
 
@@ -77,13 +98,17 @@
         <div class="border-t border-vd-border px-4 py-2 md:hidden overflow-x-auto">
             <div class="flex gap-1 min-w-max">
                 <a href="{{ route('user.dashboard') }}"
-                   class="{{ request()->routeIs('user.dashboard') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Dashboard</a>
+                   class="{{ request()->routeIs('user.dashboard') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Overview</a>
                 <a href="{{ route('user.products.index') }}"
                    class="{{ request()->routeIs('user.products.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Products</a>
                 <a href="{{ route('user.licenses.index') }}"
                    class="{{ request()->routeIs('user.licenses.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Licenses</a>
                 <a href="{{ route('user.downloads.index') }}"
                    class="{{ request()->routeIs('user.downloads.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Downloads</a>
+                <a href="{{ route('user.invoices.index') }}"
+                   class="{{ request()->routeIs('user.invoices.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Invoices</a>
+                <a href="{{ route('user.quotations.index') }}"
+                   class="{{ request()->routeIs('user.quotations.*') ? 'vd-nav-link-active' : 'vd-nav-link' }}">Quotations</a>
             </div>
         </div>
     </header>

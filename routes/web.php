@@ -3,11 +3,13 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DownloadController;
 use App\Http\Controllers\Admin\EntitlementController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LicenseActivationController;
 use App\Http\Controllers\Admin\LicenseController;
 use App\Http\Controllers\Admin\LicenseTypeController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -55,6 +57,10 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::resource('license-activations', LicenseActivationController::class)->only(['index', 'destroy']);
         Route::resource('entitlements', EntitlementController::class);
         Route::resource('download-items', DownloadController::class);
+        Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+        Route::resource('invoices', InvoiceController::class);
+        Route::get('quotations/{quotation}/download', [QuotationController::class, 'download'])->name('quotations.download');
+        Route::resource('quotations', QuotationController::class);
     });
 
 Route::middleware(['auth', 'verified', 'role:'.User::ROLE_USER])
@@ -67,6 +73,10 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_USER])
         Route::resource('licenses', UserLicenseController::class)->only(['index', 'show']);
         Route::get('downloads/{downloadItem}/download', [UserDownloadController::class, 'download'])->name('downloads.download');
         Route::resource('downloads', UserDownloadController::class)->only(['index']);
+        Route::get('invoices/{invoice}/download', [\App\Http\Controllers\User\InvoiceController::class, 'download'])->name('invoices.download');
+        Route::resource('invoices', \App\Http\Controllers\User\InvoiceController::class)->only(['index']);
+        Route::get('quotations/{quotation}/download', [\App\Http\Controllers\User\QuotationController::class, 'download'])->name('quotations.download');
+        Route::resource('quotations', \App\Http\Controllers\User\QuotationController::class)->only(['index']);
     });
 
 Route::middleware('auth')->group(function () {

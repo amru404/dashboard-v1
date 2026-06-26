@@ -30,6 +30,8 @@ export default {
                     error:          '#FF5A5F',
                     success:        '#22C55E',
                     warning:        '#F59E0B',
+                    form :          '#0f1829',
+                    formBorder :    '#2a3f5f'
                 },
             },
             fontFamily: {
@@ -73,6 +75,7 @@ export default {
                 'vd-gradient': 'linear-gradient(135deg, #020307 0%, #05122B 50%, #05142F 100%)',
                 'vd-hero':     'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(122,43,255,0.20) 0%, transparent 70%)',
             },
+            
         },
     },
 

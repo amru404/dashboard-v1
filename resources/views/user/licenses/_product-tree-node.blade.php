@@ -1,10 +1,30 @@
 @props(['product', 'depth' => 0])
 
+@php
+    // Filter: Only show products that have licenses (directly or in descendants)
+    $hasLicenses = $product->licenses->isNotEmpty();
+    $childrenWithLicenses = $product->allChildren->filter(function($child) {
+        return $child->licenses->isNotEmpty() || 
+               $child->allChildren->some(function($grandchild) {
+                   return $grandchild->licenses->isNotEmpty();
+               });
+    });
+    
+    // Only render if this product or descendants have licenses
+    $shouldRender = $hasLicenses || $childrenWithLicenses->isNotEmpty();
+@endphp
+
+@if ($shouldRender)
 <div class="space-y-3">
     <div class="rounded-lg border border-[#2a3f5f] bg-[#0f1829]/40 p-4">
         <div class="flex items-start justify-between gap-3 mb-3">
             <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-semibold text-white mb-1">{{ $product->name }}</h3>
+                <h3 class="text-sm font-semibold text-white mb-1">
+                    @if($depth > 0)
+                        <span class="text-gray-500 mr-2">{{ str_repeat('→ ', $depth) }}</span>
+                    @endif
+                    {{ $product->name }}
+                </h3>
                 <p class="text-xs text-gray-400 font-mono">{{ $product->code }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -88,7 +108,7 @@
         @endif
     </div>
 
-    @if ($product->allChildren->isNotEmpty())
+    @if ($childrenWithLicenses->isNotEmpty())
         <div class="pl-4 border-l-2 border-[#2a3f5f] space-y-3">
             @foreach ($product->allChildren as $child)
                 @include('user.licenses._product-tree-node', [
@@ -99,3 +119,4 @@
         </div>
     @endif
 </div>
+@endif

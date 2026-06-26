@@ -8,7 +8,8 @@ export default defineConfig({
                 'resources/css/app.css', 
                 'resources/js/app.js',
                 'resources/js/sub-product-filter.js',
-                'resources/js/license-filter.js'
+                'resources/js/license-filter.js',
+                'resources/js/admin-download-filter.js'
             ],
             refresh: true,
         }),

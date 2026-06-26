@@ -10,11 +10,6 @@
         </x-slot>
     </x-page-header>
 
-    <x-product-breadcrumbs
-        :breadcrumbs="$breadcrumbs"
-        :current="$product"
-        :path="$product->parent_id ? $catalogPath : null"
-    />
 
     <div class="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
         <x-card>

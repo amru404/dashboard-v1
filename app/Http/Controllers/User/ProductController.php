@@ -26,7 +26,7 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product): View
     {
-        $product->loadMissing(['parent.parent', 'subProducts.licenses.licenseType', 'subProducts.licenses.activations']);
+        $product->loadMissing(['parent.parent', 'subProducts', 'subProducts.allChildren']);
 
         $entitlement = $request->user()
             ->entitlements()

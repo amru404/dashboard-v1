@@ -4,101 +4,270 @@
 
 @section('content')
 
+@php
+    $totalCount = $downloadItems->total();
+    $activeCount = $downloadItems->where('is_active', true)->where('expired_date', null)->count() + 
+                   $downloadItems->where('is_active', true)->where('expired_date', '>', now())->count();
+    $totalSize = $downloadItems->sum('file_size');
+    $products = $downloadItems->pluck('product')->unique('id');
+@endphp
+
 {{-- ── Page Header ── --}}
 <div class="mb-8">
-    <div class="flex items-start justify-between gap-4 mb-2">
+    <div class="flex items-start justify-between gap-4 mb-6">
         <div class="flex-1">
             <h1 class="text-3xl font-bold text-white mb-2">Download Items</h1>
             <p class="text-base text-gray-300">
-                Private storage records connected to entitled products and customer downloads.
+                Manage downloadable files for entitled customers
             </p>
         </div>
-        <div class="shrink-0">
-            <a href="{{ route('admin.download-items.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
+        
+        {{-- Layout Switcher & Create Button --}}
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 rounded-lg border border-[#2a3f5f] bg-[#0f1829] p-1">
+                <button data-layout="grid" 
+                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors bg-vd-primary text-white"
+                        title="Grid view">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" />
+                    </svg>
+                </button>
+                <button data-layout="list"
+                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors text-gray-400 hover:bg-white/5 hover:text-white"
+                        title="List view">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16M4 19h16" />
+                    </svg>
+                </button>
+            </div>
+            
+            <a href="{{ route('admin.download-items.create') }}" 
+               class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
                 Register Download
             </a>
         </div>
     </div>
+
+    {{-- Search & Filter Bar --}}
+    <x-card>
+        <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="downloadSearch"
+                    placeholder="Search by filename or product..."
+                    class="w-full px-4 py-2.5 pl-10 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm" />
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+
+            <select 
+                id="downloadProductFilter" 
+                class="px-4 py-2.5 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm min-w-[160px]">
+                <option value="all">All Products</option>
+                @foreach($products as $product)
+                    <option value="{{ $product->id }}">{{ $product->name }}</option>
+                @endforeach
+            </select>
+            
+            <select 
+                id="downloadStatusFilter" 
+                class="px-4 py-2.5 rounded-lg bg-[#0f1829] border border-[#2a3f5f] text-white focus:outline-none focus:ring-2 focus:ring-vd-primary/50 focus:border-vd-primary transition-colors text-sm min-w-[140px]">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="expired">Expired</option>
+            </select>
+        </div>
+    </x-car>
 </div>
 
-{{-- Warning Info Box --}}
-<div class="vd-card  border-[#2a3f5f] mb-6 flex items-start gap-3">
-    <svg class="mt-0.5 h-5 w-5 shrink-0 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-    </svg>
-    <p class="text-sm text-gray-300 leading-relaxed">
-        Files must live under <code class="rounded px-1.5 py-0.5 bg-[#0f1829] font-mono text-xs text-cyan-400 border border-[#2a3f5f]">storage/app/private/downloads</code>.
-        Do not place installer files in <code class="rounded px-1.5 py-0.5 bg-[#0f1829] font-mono text-xs text-cyan-400 border border-[#2a3f5f]">public/</code> — customer delivery streams private files through a controller with entitlement checks.
-    </p>
-</div>
-
-<div class="vd-card  border-[#2a3f5f] overflow-hidden !p-0">
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead>
-                <tr class="bg-[#0f1829]/30 border-b border-[#2a3f5f]">
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">File</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Product</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Expiry</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Logs</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-[#2a3f5f]">
-                @forelse ($downloadItems as $downloadItem)
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4">
-                            <p class="text-sm font-medium text-white">{{ $downloadItem->file_name }}</p>
-                            <p class="mt-1 text-sm text-gray-400">
-                                {{ $downloadItem->version ?? 'No version' }}
-                                &mdash;
-                                {{ number_format($downloadItem->file_size / 1048576, 2) }} MB
-                            </p>
-                            <p class="mt-1 font-mono text-xs text-gray-500">{{ $downloadItem->file_path }}</p>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-400">{{ $downloadItem->product->name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-400">
-                            {{ $downloadItem->user?->name ?? 'All entitled users' }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-400">
-                            {{ $downloadItem->expired_date?->format('M j, Y') ?? 'Never' }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-400">{{ $downloadItem->logs_count }}</td>
-                        <td class="px-6 py-4">
-                            @if ($downloadItem->isExpired())
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Expired</span>
-                            @elseif ($downloadItem->is_active)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">Active</span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">Inactive</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex flex-wrap justify-end gap-2">
-                                <a href="{{ route('admin.download-items.show', $downloadItem) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">View</a>
-                                <a href="{{ route('admin.download-items.edit', $downloadItem) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors">Edit</a>
-                                <form method="POST" action="{{ route('admin.download-items.destroy', $downloadItem) }}"
-                                      onsubmit="return confirm('Delete this download item? The private file will remain in storage.')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-300 transition-colors">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-400">
-                            No download items have been registered.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+{{-- ── Stats Cards ── --}}
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div class="vd-card border-[#2a3f5f] !p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Files</p>
+        <p class="text-3xl font-bold text-white" id="downloadCount">{{ $totalCount }}</p>
+        <p class="text-xs text-gray-500 mt-1"><span id="downloadLabel">{{ $totalCount === 1 ? 'item' : 'items' }}</span></p>
     </div>
-    <div class="border-t border-[#2a3f5f] px-6 py-4">
+    
+    <div class="vd-card border-[#2a3f5f] !p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Active</p>
+        <p class="text-3xl font-bold text-vd-primary">{{ $activeCount }}</p>
+    </div>
+    
+    <div class="vd-card border-[#2a3f5f] !p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Size</p>
+        <p class="text-3xl font-bold text-white">
+            {{ number_format($totalSize / 1024 / 1024, 0) }} MB
+        </p>
+    </div>
+    
+    <div class="vd-card border-[#2a3f5f] !p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Products</p>
+        <p class="text-3xl font-bold text-white">{{ $products->count() }}</p>
+    </div>
+</div>
+
+{{-- ── Grid View ── --}}
+<div id="gridView" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    @forelse ($downloadItems as $downloadItem)
+        @php
+            $status = $downloadItem->isExpired() ? 'expired' : ($downloadItem->is_active ? 'active' : 'inactive');
+        @endphp
+        <div class="download-item vd-card border-[#2a3f5f] !p-5"
+             data-filename="{{ strtolower($downloadItem->file_name) }}"
+             data-product="{{ strtolower($downloadItem->product->name) }}"
+             data-product-id="{{ $downloadItem->product_id }}"
+             data-status="{{ $status }}">
+            
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <h3 class="text-base font-bold text-white flex-1">{{ $downloadItem->file_name }}</h3>
+                @if ($status === 'expired')
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Expired</span>
+                @elseif ($status === 'active')
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">Active</span>
+                @else
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">Inactive</span>
+                @endif
+            </div>
+            
+            <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">{{ $downloadItem->product->name }}</p>
+            
+            <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Version</p>
+                    <p class="text-white font-medium">{{ $downloadItem->version ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Size</p>
+                    <p class="text-white font-medium">{{ number_format($downloadItem->file_size / 1024 / 1024, 2) }} MB</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Expires</p>
+                    <p class="text-white font-medium">{{ $downloadItem->expired_date?->format('M j, Y') ?? 'Never' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Downloads</p>
+                    <p class="text-white font-medium">{{ $downloadItem->logs_count }}</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 pt-3 border-t border-[#2a3f5f]">
+                <a href="{{ route('admin.download-items.show', $downloadItem) }}" 
+                   class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm border border-white/20 transition-colors">
+                    View
+                </a>
+                <a href="{{ route('admin.download-items.edit', $downloadItem) }}" 
+                   class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-sm border border-vd-primary/30 transition-colors">
+                    Edit
+                </a>
+                <form method="POST" action="{{ route('admin.download-items.destroy', $downloadItem) }}"
+                      onsubmit="return confirm('Delete this download item?')" class="inline-block">
+                    @csrf @method('DELETE')
+                    <button type="submit" 
+                            class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm border border-red-500/30 transition-colors">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    @empty
+        <div class="vd-card border-[#2a3f5f] md:col-span-2 xl:col-span-3 !p-12 text-center">
+            <svg class="mx-auto mb-4 h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+            </svg>
+            <p class="text-gray-400">No downloads available</p>
+        </div>
+    @endforelse
+</div>
+
+{{-- ── List View ── --}}
+<div id="listView" class="hidden vd-card border-[#2a3f5f] !p-0 overflow-hidden">
+    <div class="overflow-x-auto">
+        @forelse ($downloadItems as $downloadItem)
+            @php
+                $status = $downloadItem->isExpired() ? 'expired' : ($downloadItem->is_active ? 'active' : 'inactive');
+            @endphp
+            <div class="download-item flex items-center justify-between gap-4 px-6 py-4 border-b border-[#2a3f5f] last:border-b-0 hover:bg-white/5 transition-colors min-w-[900px]"
+                 data-filename="{{ strtolower($downloadItem->file_name) }}"
+                 data-product="{{ strtolower($downloadItem->product->name) }}"
+                 data-product-id="{{ $downloadItem->product_id }}"
+                 data-status="{{ $status }}">
+                
+                <div class="flex-1 min-w-0" style="max-width: 300px;">
+                    <h3 class="text-base font-bold text-white truncate mb-2">{{ $downloadItem->file_name }}</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold truncate">{{ $downloadItem->product->name }}</p>
+                </div>
+
+                <div class="flex items-center gap-6 text-sm flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        @if ($status === 'expired')
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Expired</span>
+                        @elseif ($status === 'active')
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">Active</span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">Inactive</span>
+                        @endif
+                        
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400 mb-1 whitespace-nowrap">Version</p>
+                            <p class="text-white font-medium whitespace-nowrap">{{ $downloadItem->version ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400 mb-1 whitespace-nowrap">Size</p>
+                        <p class="text-white font-medium whitespace-nowrap">{{ number_format($downloadItem->file_size / 1024 / 1024, 2) }} MB</p>
+                    </div>
+                    
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400 mb-1 whitespace-nowrap">Expires</p>
+                        <p class="text-white font-medium whitespace-nowrap">{{ $downloadItem->expired_date?->format('M j, Y') ?? 'Never' }}</p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <a href="{{ route('admin.download-items.edit', $downloadItem) }}" 
+                           class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-sm border border-vd-primary/30 transition-colors whitespace-nowrap">
+                            Edit
+                        </a>
+                        <form method="POST" action="{{ route('admin.download-items.destroy', $downloadItem) }}"
+                              onsubmit="return confirm('Delete this download item?')" class="inline-block">
+                            @csrf @method('DELETE')
+                            <button type="submit" 
+                                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm border border-red-500/30 transition-colors whitespace-nowrap">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="!p-12 text-center">
+                <svg class="mx-auto mb-4 h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                </svg>
+                <p class="text-gray-400">No downloads available</p>
+            </div>
+        @endforelse
+    </div>
+</div>
+
+{{-- No Results Message --}}
+<div id="noDownloadResults" class="hidden vd-card border-[#2a3f5f] !p-12 text-center">
+    <svg class="mx-auto mb-4 h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <p class="text-gray-400">No downloads found matching your search criteria.</p>
+</div>
+
+{{-- ── Pagination ── --}}
+@if ($downloadItems->hasPages())
+    <div class="mt-8">
         {{ $downloadItems->links() }}
     </div>
-</div>
+@endif
+
 @endsection
+
+@vite('resources/js/admin-download-filter.js')

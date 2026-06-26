@@ -58,14 +58,14 @@
 
         {{-- ── reCAPTCHA section ── --}}
          @if ($recaptchaEnabled)
-            <div class="rounded-2xl border border-madani-border bg-madani-ghost p-4">
+            <div class="rounded-2xl border border-vd-border p-4">
                 <div class="mb-3 flex items-center justify-between gap-3">
-                    <span class="text-sm font-semibold text-madani-deep">Security check</span>
-                    <span class="text-xs font-semibold text-madani-muted">reCAPTCHA</span>
+                    <span class="text-sm font-semibold text-vd-deep">Security check</span>
+                    <span class="text-xs font-semibold text-vd-muted">reCAPTCHA</span>
                 </div>
 
                 <div
-                    class="g-recaptcha"
+                    class="g-recaptcha flex justify-center"
                     data-sitekey="{{ config('services.recaptcha.site_key') }}"
                     data-callback="onRecaptchaVerified"
                     data-expired-callback="onRecaptchaExpired"

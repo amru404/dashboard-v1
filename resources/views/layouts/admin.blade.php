@@ -33,34 +33,42 @@
                 <nav class="hidden items-center gap-1 md:flex">
                     <a href="{{ route('admin.dashboard') }}"
                        class="{{ request()->routeIs('admin.dashboard') ? 'vd-nav-link-active' : 'vd-nav-link' }}">
-                        Dashboard
+                        Overview
                     </a>
 
                     @php
                         $navGroups = [
                             [
-                                'label'  => 'Catalog',
-                                'active' => request()->routeIs('admin.products.*') || request()->routeIs('admin.license-types.*'),
+                                'label'  => 'Products',
+                                'active' => request()->routeIs('admin.products.*') || request()->routeIs('admin.download-items.*'),
                                 'links'  => [
-                                    ['label' => 'Products',      'route' => 'admin.products.index',      'match' => 'admin.products.*'],
+                                    ['label' => 'Products',  'route' => 'admin.products.index',      'match' => 'admin.products.*'],
+                                    ['label' => 'Downloads', 'route' => 'admin.download-items.index', 'match' => 'admin.download-items.*'],
+                                ],
+                            ],
+                            [
+                                'label'  => 'Licensing',
+                                'active' => request()->routeIs('admin.license-types.*') || request()->routeIs('admin.licenses.*') || request()->routeIs('admin.entitlements.*'),
+                                'links'  => [
                                     ['label' => 'License Types', 'route' => 'admin.license-types.index', 'match' => 'admin.license-types.*'],
+                                    ['label' => 'Licenses',      'route' => 'admin.licenses.index',       'match' => 'admin.licenses.*'],
+                                    ['label' => 'Entitlements',  'route' => 'admin.entitlements.index',   'match' => 'admin.entitlements.*'],
                                 ],
                             ],
                             [
-                                'label'  => 'Access',
-                                'active' => request()->routeIs('admin.entitlements.*') || request()->routeIs('admin.licenses.*') || request()->routeIs('admin.download-items.*'),
-                                'links'  => [
-                                    ['label' => 'Entitlements', 'route' => 'admin.entitlements.index',   'match' => 'admin.entitlements.*'],
-                                    ['label' => 'Licenses',     'route' => 'admin.licenses.index',       'match' => 'admin.licenses.*'],
-                                    ['label' => 'Downloads',    'route' => 'admin.download-items.index', 'match' => 'admin.download-items.*'],
-                                ],
-                            ],
-                            [
-                                'label'  => 'Users',
+                                'label'  => 'Administration',
                                 'active' => request()->routeIs('admin.organizations.*') || request()->routeIs('admin.users.*'),
                                 'links'  => [
                                     ['label' => 'Organizations', 'route' => 'admin.organizations.index', 'match' => 'admin.organizations.*'],
                                     ['label' => 'Users',         'route' => 'admin.users.index',         'match' => 'admin.users.*'],
+                                ],
+                            ],
+                            [
+                                'label'  => 'Documents',
+                                'active' => request()->routeIs('admin.invoices.*') || request()->routeIs('admin.quotations.*'),
+                                'links'  => [
+                                    ['label' => 'Invoices',   'route' => 'admin.invoices.index',    'match' => 'admin.invoices.*'],
+                                    ['label' => 'Quotations', 'route' => 'admin.quotations.index',  'match' => 'admin.quotations.*'],
                                 ],
                             ],
                         ];
