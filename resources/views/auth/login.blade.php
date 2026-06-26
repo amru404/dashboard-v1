@@ -57,20 +57,22 @@
         </div>
 
         {{-- ── reCAPTCHA section ── --}}
-        @if ($recaptchaEnabled)
-            <div class="rounded-lg border border-vd-border-strong bg-vd-secondary/50 p-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <span class="text-label-sm text-vd-on-surface">Security check</span>
-                    <span class="text-eyebrow text-vd-muted">reCAPTCHA</span>
+         @if ($recaptchaEnabled)
+            <div class="rounded-2xl border border-madani-border bg-madani-ghost p-4">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                    <span class="text-sm font-semibold text-madani-deep">Security check</span>
+                    <span class="text-xs font-semibold text-madani-muted">reCAPTCHA</span>
                 </div>
-                <div class="g-recaptcha"
+
+                <div
+                    class="g-recaptcha"
                     data-sitekey="{{ config('services.recaptcha.site_key') }}"
                     data-callback="onRecaptchaVerified"
                     data-expired-callback="onRecaptchaExpired"
                     data-error-callback="onRecaptchaExpired"
-                    data-theme="dark">
-                </div>
-                <x-input-error :messages="$errors->get('g-recaptcha-response')" class="mt-2" />
+                ></div>
+
+                <x-input-error :messages="$errors->get('g-recaptcha-response')" class="mt-3" />
             </div>
         @endif
 
@@ -102,10 +104,11 @@
     @if (Route::has('register'))
         <div class="mt-6 text-center">
             <p class="text-body-sm text-vd-muted">
-                Don't have an account?
-                <a href="{{ route('register') }}" class="font-medium text-vd-primary hover:brightness-110 transition-all">
-                    Create one
+                Return to
+                <a href="https://vericotech.com/" class="font-medium text-vd-primary hover:brightness-110 transition-all">
+                    VERIDIUM Web
                 </a>
+                ?
             </p>
         </div>
     @endif

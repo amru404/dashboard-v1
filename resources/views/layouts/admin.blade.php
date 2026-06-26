@@ -4,9 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin') — {{ config('app.name', 'Customer Area') }}</title>
+    <title>@yield('title', 'Admin') — {{ config('app.name', 'Veriotech') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ asset('img/favicon.svg') }}">
+
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
