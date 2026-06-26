@@ -109,6 +109,7 @@
                         <svg class="h-4 w-4 text-vd-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </summary>
                     <div class="absolute right-0 mt-2 w-44 rounded-md bg-vd-surface shadow-lg z-50">
+                        <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-vd-on-surface hover:bg-vd-border">Settings</a>
                         <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-vd-on-surface hover:bg-vd-border">Profile</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

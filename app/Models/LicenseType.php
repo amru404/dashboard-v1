@@ -15,12 +15,14 @@ class LicenseType extends Model
         'name',
         'code',
         'is_active',
+        'include_in_packages',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'include_in_packages' => 'boolean',
         ];
     }
 

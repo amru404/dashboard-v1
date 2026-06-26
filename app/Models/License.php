@@ -130,7 +130,13 @@ class License extends Model
 
     public static function generateKey(): string
     {
-        return collect(range(1, 4))
+        $setting = \App\Models\Setting::class;
+        $keyLength = $setting::get('license_key_length', 32);
+        
+        // Calculate how many 2-byte (4 hex character) segments we need
+        $segments = ceil($keyLength / 4);
+        
+        return collect(range(1, $segments))
             ->map(fn () => strtoupper(bin2hex(random_bytes(2))))
             ->implode('-');
     }

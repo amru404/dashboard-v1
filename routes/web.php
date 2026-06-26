@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
     ->name('admin.')
     ->group(function (): void {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+        Route::put('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
         Route::resource('organizations', OrganizationController::class);
         Route::resource('users', UserController::class);
         Route::resource('products', ProductController::class);

@@ -91,14 +91,15 @@
                             {{ $invoice->download_expired_at?->format('M j, Y') ?? 'No limit' }}
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @if ($invoice->is_active)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">Yes</span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">No</span>
-                            @endif
+                         <x-badge :active="$invoice->is_active">
+                            {{ $invoice->is_active ? 'Active' : 'Inactive' }}
+                        </x-badge>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center gap-2">
+                                <a href="{{ route('admin.invoices.show', $invoice) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 font-semibold text-xs border border-gray-500/30 transition-colors">
+                                    View
+                                </a>
                                 <a href="{{ route('admin.invoices.edit', $invoice) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-xs border border-vd-primary/30 transition-colors">
                                     Edit
                                 </a>

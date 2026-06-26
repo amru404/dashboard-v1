@@ -25,7 +25,7 @@ class LicenseTypeController extends Controller
     public function create(): View
     {
         return view('admin.license-types.create', [
-            'licenseType' => new LicenseType(['is_active' => true]),
+            'licenseType' => new LicenseType(['is_active' => true, 'include_in_packages' => true]),
         ]);
     }
 
@@ -101,9 +101,11 @@ class LicenseTypeController extends Controller
                 Rule::unique('license_types', 'code')->ignore($licenseType),
             ],
             'is_active' => ['sometimes', 'boolean'],
+            'include_in_packages' => ['sometimes', 'boolean'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+        $data['include_in_packages'] = $request->boolean('include_in_packages');
 
         return $data;
     }

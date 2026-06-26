@@ -99,6 +99,9 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center gap-2">
+                                <a href="{{ route('admin.quotations.show', $quotation) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 font-semibold text-xs border border-gray-500/30 transition-colors">
+                                    View
+                                </a>
                                 <a href="{{ route('admin.quotations.edit', $quotation) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-xs border border-vd-primary/30 transition-colors">
                                     Edit
                                 </a>

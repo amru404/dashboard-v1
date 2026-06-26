@@ -21,6 +21,13 @@ class InvoiceController extends Controller
         return view('admin.invoices.index', compact('invoices'));
     }
 
+    public function show(Invoice $invoice): View
+    {
+        $invoice->load('users');
+
+        return view('admin.invoices.show', compact('invoice'));
+    }
+
     public function create(): View
     {
         $users = User::orderBy('name')->get();

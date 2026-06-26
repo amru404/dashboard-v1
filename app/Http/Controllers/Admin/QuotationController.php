@@ -21,6 +21,13 @@ class QuotationController extends Controller
         return view('admin.quotations.index', compact('quotations'));
     }
 
+    public function show(Quotation $quotation): View
+    {
+        $quotation->load('users');
+
+        return view('admin.quotations.show', compact('quotation'));
+    }
+
     public function create(): View
     {
         $users = User::orderBy('name')->get();

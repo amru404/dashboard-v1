@@ -14,10 +14,17 @@
     </div>
 </div>
 
-<label for="is_active" class="mt-5 flex items-center gap-3">
-    <input id="is_active" type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-madani-green shadow-sm focus:ring-madani-green" @checked(old('is_active', $licenseType->is_active))>
-    <span class="text-sm font-semibold text-madani-deep">Active license type</span>
-</label>
+<div class="mt-5 space-y-3">
+    <label for="is_active" class="flex items-center gap-3">
+        <input id="is_active" type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-madani-green shadow-sm focus:ring-madani-green" @checked(old('is_active', $licenseType->is_active))>
+        <span class="text-sm font-semibold text-madani-deep">Active license type</span>
+    </label>
+    
+    <label for="include_in_packages" class="flex items-center gap-3">
+        <input id="include_in_packages" type="checkbox" name="include_in_packages" value="1" class="rounded border-gray-300 text-madani-green shadow-sm focus:ring-madani-green" @checked(old('include_in_packages', $licenseType->include_in_packages ?? true))>
+        <span class="text-sm font-semibold text-madani-deep">Include in package bundles</span>
+    </label>
+</div>
 
 <div class="mt-8 flex flex-wrap gap-3">
     <x-button>{{ $submitLabel }}</x-button>
