@@ -125,7 +125,7 @@
                     @endif
                     class="border-t border-[#2a3f5f] bg-[#0f1829]/20 px-4 py-3"
                 >
-                    <div class="space-y-2">
+                <div class="space-y-2">
                         <x-product-tree
                             :products="$product->allChildren"
                             :depth="$depth + 1"

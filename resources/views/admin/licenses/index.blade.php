@@ -4,24 +4,12 @@
 
 @section('content')
 
-<div class="mb-8">
-    <div class="flex items-start justify-between gap-4 mb-2">
-        <div class="flex-1">
-            <h1 class="text-3xl font-bold text-white mb-2">Licenses</h1>
-            <p class="text-base text-gray-300">
-                Installer-facing license records assigned to customer users.
-            </p>
-        </div>
-        <div class="flex gap-2 shrink-0 flex-wrap">
-            <a href="{{ route('admin.licenses.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                New License
-            </a>
-        </div>
-    </div>
-</div>
+    <x-page-header title="Licenses" subtitle="Installer-facing license records assigned to customer users.">
+        <x-slot name="actions">
+            <x-button variant="primary" :href="route('admin.licenses.create')">New Licenses</x-button>
+        </x-slot>
+    </x-page-header>
+
 
 @php
     // Group licenses by user first
