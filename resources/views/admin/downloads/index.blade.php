@@ -153,22 +153,22 @@
                 </div>
             </div>
             
-            <div class="flex flex-wrap gap-2 pt-3 border-t border-[#2a3f5f]">
-                <a href="{{ route('admin.download-items.show', $downloadItem) }}" 
-                   class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm border border-white/20 transition-colors">
-                    View
+            <div class="flex items-center justify-center gap-6 pt-3 border-t border-[#2a3f5f]">
+                <a href="{{ route('admin.download-items.show', $downloadItem) }}" class="text-xs font-semibold text-gray-300 hover:text-white">View</a>
+                <a  href="{{ route('admin.download-items.edit', $downloadItem) }}" class="text-xs font-semibold text-gray-300 hover:text-white">Edit</a>
+
+                <a href="#"
+                onclick="event.preventDefault(); if(confirm('Delete this download item?')) document.getElementById('delete-{{ $downloadItem->id }}').submit();"
+                class="text-xs font-semibold text-red-400 hover:text-red-300">
+                    Delete
                 </a>
-                <a href="{{ route('admin.download-items.edit', $downloadItem) }}" 
-                   class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-sm border border-vd-primary/30 transition-colors">
-                    Edit
-                </a>
-                <form method="POST" action="{{ route('admin.download-items.destroy', $downloadItem) }}"
-                      onsubmit="return confirm('Delete this download item?')" class="inline-block">
-                    @csrf @method('DELETE')
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm border border-red-500/30 transition-colors">
-                        Delete
-                    </button>
+
+                <form id="delete-{{ $downloadItem->id }}"
+                    method="POST"
+                    action="{{ route('admin.download-items.destroy', $downloadItem) }}"
+                    class="hidden">
+                    @csrf
+                    @method('DELETE')
                 </form>
             </div>
         </div>
@@ -227,17 +227,24 @@
                     </div>
 
                     <div class="flex gap-2">
+                        <a href="{{ route('admin.download-items.show', $downloadItem) }}" 
+                           class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors whitespace-nowrap">
+                            Show    
+                        </a>
                         <a href="{{ route('admin.download-items.edit', $downloadItem) }}" 
-                           class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-vd-primary/20 hover:bg-vd-primary/30 text-vd-primary font-semibold text-sm border border-vd-primary/30 transition-colors whitespace-nowrap">
+                           class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors whitespace-nowrap">
                             Edit
                         </a>
-                        <form method="POST" action="{{ route('admin.download-items.destroy', $downloadItem) }}"
-                              onsubmit="return confirm('Delete this download item?')" class="inline-block">
-                            @csrf @method('DELETE')
-                            <button type="submit" 
-                                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm border border-red-500/30 transition-colors whitespace-nowrap">
-                                Delete
-                            </button>
+                        <a href="{{ route('admin.download-items.destroy', $downloadItem) }}" 
+                           class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-vd-error hover:text-vd-error transition-colors whitespace-nowrap">
+                            delete
+                        </a>
+                         <form id="delete-{{ $downloadItem->id }}"
+                            method="POST"
+                            action="{{ route('admin.download-items.destroy', $downloadItem) }}"
+                            class="hidden">
+                            @csrf
+                            @method('DELETE')
                         </form>
                     </div>
                 </div>

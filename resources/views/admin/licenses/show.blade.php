@@ -11,7 +11,7 @@
 
     <x-page-header title="License details" subtitle="{{ $license->user->name }} - {{ $license->product->name }}">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.licenses.edit', $license)">Edit license</x-button>
+            <x-button variant="secondary" :href="route('admin.licenses.add-keys', $license)">Add sub-product keys</x-button>
             <x-button variant="secondary" :href="route('admin.licenses.index')">Back to licenses</x-button>
         </x-slot>
     </x-page-header>
@@ -104,6 +104,66 @@
             </x-card>
         </div>
     </div>
+
+    <x-card class="mt-6 overflow-hidden p-0">
+        <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
+            <h2 class="text-lg font-bold text-madani-deep">Sub-product licenses</h2>
+            <p class="mt-1 text-sm text-madani-muted">License keys issued for sub-products under this parent product.</p>
+        </div>
+
+        @php
+            $subProductLicenses = \App\Models\License::query()
+                ->where('product_id', $license->product_id)
+                ->where('sub_product_id', '!=', null)
+                ->where('user_id', $license->user_id)
+                ->with('subProduct')
+                ->orderBy('sub_product_id')
+                ->get();
+        @endphp
+
+        @if ($subProductLicenses->isEmpty())
+            <div class="px-6 py-10 text-center">
+                <p class="text-sm text-madani-muted">No sub-product keys added yet.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-madani-border">
+                    <thead class="bg-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Sub-Product</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">License Key</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Activations</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Status</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-madani-border bg-white">
+                        @foreach ($subProductLicenses as $subLicense)
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-madani-deep">{{ $subLicense->subProduct?->name ?? 'Unknown' }}</td>
+                                <td class="px-6 py-4 font-mono text-sm text-madani-muted">{{ $subLicense->masked_license_key }}</td>
+                                <td class="px-6 py-4 text-sm text-madani-muted">{{ $subLicense->activeActivationCount() }} / {{ $subLicense->max_activations ?? 'Unlimited' }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    @if ($subLicense->isExpired())
+                                        <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">Expired</span>
+                                    @else
+                                        <span class="rounded-full bg-madani-pale px-3 py-1 text-xs font-semibold text-madani-green">Active</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <form method="POST" action="{{ route('admin.licenses.destroy', $subLicense) }}" onsubmit="return confirm('Remove this sub-product license?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button variant="ghost">Delete</x-button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </x-card>
 
     <x-card class="mt-6 overflow-hidden p-0">
         <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">

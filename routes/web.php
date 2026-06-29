@@ -51,6 +51,10 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::post('licenses/generate-key', [LicenseController::class, 'generateKey'])->name('licenses.generate-key');
         Route::get('licenses/batch-create', [LicenseController::class, 'batchCreate'])->name('licenses.batch-create');
         Route::post('licenses/batch-store', [LicenseController::class, 'batchStore'])->name('licenses.batch-store');
+        Route::get('licenses/generate-bulk', [LicenseController::class, 'generateBulk'])->name('licenses.generate-bulk');
+        Route::post('licenses/bulk-store', [LicenseController::class, 'bulkStore'])->name('licenses.bulk-store');
+        Route::get('licenses/{license}/add-keys', [LicenseController::class, 'addKeys'])->name('licenses.add-keys');
+        Route::post('licenses/{license}/store-keys', [LicenseController::class, 'storeKeys'])->name('licenses.store-keys');
         Route::get('licenses/{license}/show-key', [LicenseController::class, 'showKey'])->name('licenses.show-key');
         Route::post('licenses/{license}/reveal-key', [LicenseController::class, 'revealKey'])->name('licenses.reveal-key');
         Route::post('licenses/{license}/reset-activation', [LicenseController::class, 'resetActivation'])->name('licenses.reset-activation');

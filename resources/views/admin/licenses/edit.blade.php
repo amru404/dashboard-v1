@@ -10,7 +10,7 @@
     </x-page-header>
 
     <x-card>
-        <form method="POST" action="{{ route('admin.licenses.update', $license) }}">
+        <form method="POST" action="{{ route('admin.licenses.update', $license) }}" x-data="{ licenseMode: 'new_license', noLicenseKey: false }">
             @method('PUT')
             @include('admin.licenses._form', ['submitLabel' => 'Save changes'])
         </form>

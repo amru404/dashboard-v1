@@ -11,7 +11,7 @@ class ProductTreeBuilder
     /**
      * @return Collection<int, array{id: int, name: string, code: string, label: string, path: string, depth: int, is_active: bool}>
      */
-    public function options(?Product $excludedProduct = null, bool $activeOnly = false, bool $rootOnly = false): Collection
+    public function options(?Product $excludedProduct = null, bool $activeOnly = false, bool $rootOnly = false, bool $parentOnly = false): Collection
     {
         $excludedIds = collect();
 
@@ -27,7 +27,7 @@ class ProductTreeBuilder
             ->orderBy('name')
             ->get();
 
-        if ($rootOnly) {
+        if ($parentOnly) {
             return $products
                 ->filter(fn (Product $product): bool => ! $excludedIds->contains($product->id))
                 ->when($activeOnly, fn (EloquentCollection $products): EloquentCollection => $products->filter(fn (Product $product): bool => $product->is_active))

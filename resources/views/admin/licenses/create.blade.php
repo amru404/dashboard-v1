@@ -10,7 +10,7 @@
     </x-page-header>
 
     <x-card>
-        <form method="POST" action="{{ route('admin.licenses.store') }}" data-batch-url="{{ route('admin.licenses.batch-store') }}" data-token="{{ csrf_token() }}">
+        <form method="POST" action="{{ route('admin.licenses.store') }}" data-batch-url="{{ route('admin.licenses.batch-store') }}" data-token="{{ csrf_token() }}" x-data="{ licenseMode: 'new_license', noLicenseKey: false }">
             @include('admin.licenses._form', ['submitLabel' => 'Create license'])
         </form>
     </x-card>

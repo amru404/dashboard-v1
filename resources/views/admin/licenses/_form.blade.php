@@ -2,12 +2,35 @@
 
 @php
     $isEditing = $license->exists;
+    $licenseMode = old('license_mode', $isEditing ? 'new_license' : 'new_license');
 @endphp
+
+<!-- License Mode Selection -->
+<div class="mb-8 grid gap-4 md:grid-cols-2">
+    <label class="relative flex cursor-pointer items-start rounded-lg border-2 border-vd-border p-4 transition hover:border-madani-green hover:bg-vd-surface/50" :class="licenseMode === 'new_license' ? 'border-madani-green bg-madani-green/5' : ''">
+        <input type="radio" name="license_mode" value="new_license" class="mt-1" x-model="licenseMode">
+        <div class="ml-3">
+            <p class="font-semibold text-madani-deep">Create New Key</p>
+            <p class="text-sm text-madani-muted">Generate a new license key for this user</p>
+        </div>
+    </label>
+
+    <label class="relative flex cursor-pointer items-start rounded-lg border-2 border-vd-border p-4 transition hover:border-madani-green hover:bg-vd-surface/50" :class="licenseMode === 'share_license' ? 'border-madani-green bg-madani-green/5' : ''">
+        <input type="radio" name="license_mode" value="share_license" class="mt-1" x-model="licenseMode">
+        <div class="ml-3">
+            <p class="font-semibold text-madani-deep">Reuse a Client's Key</p>
+            <p class="text-sm text-madani-muted">Share an existing license so this user holds the same one (e.g. a Partner)</p>
+        </div>
+    </label>
+</div>
+
+<!-- New License Mode -->
+<div x-show="licenseMode === 'new_license'" class="space-y-5">
 
 <div class="grid gap-5 lg:grid-cols-2">
     <div>
         <x-form-label for="user_id" value="Customer user" />
-        <select id="user_id" name="user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
+        <select id="user_id" name="user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
             <option value="">Select customer</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('user_id', $license->user_id) === (string) $user->id)>
@@ -19,8 +42,22 @@
     </div>
 
     <div>
+        <x-form-label for="product_id" value="Product" />
+        <select id="product_id" name="product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+            <option value="">Select product</option>
+            @foreach ($productOptions as $option)
+                <option value="{{ $option['id'] }}" @selected((string) old('product_id', $license->product_id) === (string) $option['id'])>
+                    {{ $option['label'] }} - {{ $option['code'] }}
+                </option>
+            @endforeach
+        </select>
+        <p class="mt-2 text-xs text-madani-muted">Parent products only.</p>
+        <x-input-error :messages="$errors->get('product_id')" class="mt-2" />
+    </div>
+</div>
+  <div class="col-span-2">
         <x-form-label for="license_type_id" value="License type" />
-        <select id="license_type_id" name="license_type_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
+        <select id="license_type_id" name="license_type_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
             <option value="">Select type</option>
             @foreach ($licenseTypes as $licenseType)
                 <option value="{{ $licenseType->id }}" @selected((string) old('license_type_id', $license->license_type_id) === (string) $licenseType->id)>
@@ -31,48 +68,37 @@
         <x-input-error :messages="$errors->get('license_type_id')" class="mt-2" />
     </div>
 
-    <div>
-        <x-form-label for="product_id" value="Product" />
-        <select id="product_id" name="product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
-            <option value="">Select product</option>
-            @foreach ($productOptions as $option)
-                <option value="{{ $option['id'] }}" @selected((string) old('product_id', $license->product_id) === (string) $option['id'])>
-                    {{ $option['label'] }} - {{ $option['path'] }}
-                </option>
-            @endforeach
-        </select>
-        <p class="mt-2 text-xs text-madani-muted">Indented by recursive product hierarchy.</p>
-        <x-input-error :messages="$errors->get('product_id')" class="mt-2" />
-    </div>
 
+<!-- No License Key Option -->
+<div class="rounded-lg border border-vd-border p-4">
+    <label class="flex cursor-pointer items-center">
+        <input type="checkbox" name="no_license_key" value="1" class="rounded" @checked(old('no_license_key', false)) x-model="noLicenseKey">
+        <span class="ml-3 text-sm font-medium text-madani-deep">This product has no license key (parent only)</span>
+    </label>
+    <p class="mt-2 text-xs text-madani-muted">When checked, no license key generation will be required for this product.</p>
+</div>
+
+<!-- License Type and Other Fields - Hidden when no_license_key is checked -->
+<div x-show="!noLicenseKey" class="grid gap-5 lg:grid-cols-2">
     <div>
-        <x-form-label for="sub_product_id" value="Sub-product" />
-        <select id="sub_product_id" name="sub_product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
-            <option value="">No sub-product</option>
-            @foreach ($productOptions as $option)
-                <option value="{{ $option['id'] }}" @selected((string) old('sub_product_id', $license->sub_product_id) === (string) $option['id'])>
-                    {{ $option['label'] }} - {{ $option['path'] }}
-                </option>
-            @endforeach
-        </select>
-        <p class="mt-2 text-xs text-madani-muted">Uses the same products table. Choose a child or descendant of the main product.</p>
-        <x-input-error :messages="$errors->get('sub_product_id')" class="mt-2" />
+        <x-form-label for="expired_date" value="Expiry date" />
+        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $license->expired_date?->format('Y-m-d')) }}" class="mt-2" />
+        <x-input-error :messages="$errors->get('expired_date')" class="mt-2" />
     </div>
 
     <div>
         <x-form-label for="quantity" value="Quantity" />
-        <x-form-input id="quantity" name="quantity" type="number" min="1" value="{{ old('quantity', $license->quantity ?? 1) }}" required class="mt-2" />
+        <x-form-input id="quantity" name="quantity" type="number" min="1" value="{{ old('quantity', $license->quantity ?? 1) }}" class="mt-2" />
         <x-input-error :messages="$errors->get('quantity')" class="mt-2" />
     </div>
 
-     <div>
+    <div>
         <x-form-label for="max_activations" value="Max Device activations" />
         <x-form-input id="max_activations" name="max_activations" type="number" min="1" value="{{ old('max_activations', $license->max_activations) }}" placeholder="Unlimited when blank" class="mt-2" />
         <x-input-error :messages="$errors->get('max_activations')" class="mt-2" />
     </div>
 
-
-    <div class="rounded-xl border border-vd-border p-4">
+    <div class="rounded-xl border border-vd-border p-4 lg:col-span-2">
         <x-form-label for="license_key" :value="$isEditing ? 'New license key' : 'License key(s)'" />
 
         @if ($isEditing)
@@ -123,12 +149,53 @@
             </div>
         @endif
     </div>
+</div>
+
+</div>
+
+<!-- Share License Mode -->
+<div x-show="licenseMode === 'share_license'" class="space-y-5">
+
+<div class="grid gap-5 lg:grid-cols-2">
+    <div>
+        <x-form-label for="source_user_id" value="Source Client" />
+        <select id="source_user_id" name="source_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+            <option value="">Select source client</option>
+            @foreach ($users as $user)
+                <option value="{{ $user->id }}" @selected((string) old('source_user_id') === (string) $user->id)>
+                    {{ $user->name }} - {{ $user->email }}
+                </option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('source_user_id')" class="mt-2" />
+    </div>
 
     <div>
-        <x-form-label for="expired_date" value="Expiry date" />
-        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $license->expired_date?->format('Y-m-d')) }}" class="mt-2" />
-        <x-input-error :messages="$errors->get('expired_date')" class="mt-2" />
+        <x-form-label for="share_product_id" value="Product" />
+        <select id="share_product_id" name="share_product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+            <option value="">Select product</option>
+            @foreach ($productOptions as $option)
+                <option value="{{ $option['id'] }}" @selected((string) old('share_product_id') === (string) $option['id'])>
+                    {{ $option['label'] }} - {{ $option['code'] }}
+                </option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('share_product_id')" class="mt-2" />
     </div>
+
+    <div>
+        <x-form-label for="assign_user_id" value="Assign to User" />
+        <select id="assign_user_id" name="assign_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+            <option value="">Select user to assign</option>
+            @foreach ($users as $user)
+                <option value="{{ $user->id }}" @selected((string) old('assign_user_id', $license->user_id) === (string) $user->id)>
+                    {{ $user->name }} - {{ $user->email }}
+                </option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('assign_user_id')" class="mt-2" />
+    </div>
+</div>
 
 </div>
 
@@ -171,7 +238,6 @@
             clearGeneratedArea();
             if (!Array.isArray(keys) || keys.length === 0) return;
 
-            // if dynamic fields exist, fill them and append hidden inputs
             const provided = document.querySelectorAll('input[name="license_keys[]"]');
             if (provided.length) {
                 keys.forEach((k, i) => {
@@ -180,7 +246,6 @@
                     }
                 });
 
-                // also show readonly textarea for copy
                 const textarea = document.createElement('textarea');
                 textarea.className = 'w-full mt-2 rounded-lg bg-vd-surface border border-vd-border p-3 text-sm font-mono text-vd-on-surface';
                 textarea.readOnly = true;
@@ -190,7 +255,6 @@
             }
         };
 
-        // Attach single generate for edit mode
         singleGenerateBtn?.addEventListener('click', async () => {
             const btn = singleGenerateBtn;
             try {
@@ -213,7 +277,6 @@
             }
         });
 
-        // dynamic generation per-row
         const attachPerRowHandlers = (row) => {
             const genBtn = row.querySelector('.generate-license-btn');
             const input = row.querySelector('input[name="license_keys[]"]');
@@ -244,33 +307,27 @@
             const quantityInput = document.getElementById('quantity');
             const quantity = Math.max(1, Number(quantityInput?.value || 1));
 
-            // clear existing
             licenseKeysContainer.innerHTML = '';
 
             for (let i = 0; i < quantity; i++) {
                 const node = template.content.cloneNode(true);
-                const wrapper = node.querySelector ? node.querySelector('div') : node.children[0];
                 licenseKeysContainer.appendChild(node);
                 const appended = licenseKeysContainer.lastElementChild;
-                // attach handler
                 attachPerRowHandlers(appended);
             }
         };
 
-        // initialize on load
         rebuildLicenseFields();
 
-        // listen to quantity changes
         const qtyEl = document.getElementById('quantity');
         qtyEl?.addEventListener('input', () => rebuildLicenseFields());
 
-        // Intercept form submit when the current form is creating license keys via license_keys[]
         form?.addEventListener('submit', async (e) => {
             const quantityInput = document.getElementById('quantity');
             const quantity = Number(quantityInput?.value || 1) || 1;
             const licenseKeyInputs = document.querySelectorAll('input[name="license_keys[]"]');
 
-            if (!licenseKeyInputs.length) return; // no batch-style license key inputs, allow normal submit
+            if (!licenseKeyInputs.length) return;
 
             e.preventDefault();
 
@@ -282,7 +339,6 @@
                 return;
             }
 
-            // build payload
             const payload = {
                 user_id: document.getElementById('user_id')?.value,
                 license_type_id: document.getElementById('license_type_id')?.value,
@@ -294,7 +350,6 @@
                 license_count: Number(quantity),
             };
 
-            // collect license_keys[] if present
             const provided = Array.from(licenseKeyInputs).map(i => i.value).filter(Boolean);
             if (provided.length) payload.license_keys = provided;
 
@@ -315,13 +370,11 @@
                     throw new Error(json.message || 'Batch create failed');
                 }
 
-                // redirect if provided
                 if (json.redirect) {
                     window.location.href = json.redirect;
                     return;
                 }
 
-                // otherwise reload
                 window.location.reload();
             } catch (error) {
                 alert(error.message || 'Unable to create licenses.');
