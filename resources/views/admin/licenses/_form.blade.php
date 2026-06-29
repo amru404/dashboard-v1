@@ -72,7 +72,7 @@
 <!-- No License Key Option -->
 <div class="rounded-lg border border-vd-border p-4">
     <label class="flex cursor-pointer items-center">
-        <input type="checkbox" name="no_license_key" value="1" class="rounded" @checked(old('no_license_key', false)) x-model="noLicenseKey">
+        <input type="checkbox" id="no_license_key" name="no_license_key" value="1" class="rounded" @checked(old('no_license_key', false)) x-model="noLicenseKey">
         <span class="ml-3 text-sm font-medium text-madani-deep">This product has no license key (parent only)</span>
     </label>
     <p class="mt-2 text-xs text-madani-muted">When checked, no license key generation will be required for this product.</p>
@@ -163,23 +163,20 @@
             <option value="">Select source client</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('source_user_id') === (string) $user->id)>
-                    {{ $user->name }} - {{ $user->email }}
+                    {{ $user->name }} - {{ $user->email }} - {{ $user->organization?->name ?? 'Unassigned' }}
                 </option>
             @endforeach
         </select>
+        <p class="mt-2 text-xs text-madani-muted">Select the client whose license you want to share.</p>
         <x-input-error :messages="$errors->get('source_user_id')" class="mt-2" />
     </div>
 
     <div>
         <x-form-label for="share_product_id" value="Product" />
         <select id="share_product_id" name="share_product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
-            <option value="">Select product</option>
-            @foreach ($productOptions as $option)
-                <option value="{{ $option['id'] }}" @selected((string) old('share_product_id') === (string) $option['id'])>
-                    {{ $option['label'] }} - {{ $option['code'] }}
-                </option>
-            @endforeach
+            <option value="">First select a source client</option>
         </select>
+        <p class="mt-2 text-xs text-madani-muted">Products with licenses from the selected client.</p>
         <x-input-error :messages="$errors->get('share_product_id')" class="mt-2" />
     </div>
 
@@ -189,10 +186,11 @@
             <option value="">Select user to assign</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('assign_user_id', $license->user_id) === (string) $user->id)>
-                    {{ $user->name }} - {{ $user->email }}
+                    {{ $user->name }} - {{ $user->email }} - {{ $user->organization?->name ?? 'Unassigned' }}
                 </option>
             @endforeach
         </select>
+        <p class="mt-2 text-xs text-madani-muted">Select the user who will receive this shared license.</p>
         <x-input-error :messages="$errors->get('assign_user_id')" class="mt-2" />
     </div>
 </div>
@@ -200,7 +198,7 @@
 </div>
 
 <div class="mt-8 flex flex-wrap gap-3">
-    <x-button>{{ $submitLabel }}</x-button>
+    <x-button id="submit-btn">{{ $submitLabel }}</x-button>
     <x-button variant="secondary" :href="route('admin.licenses.index')">Cancel</x-button>
 </div>
 
@@ -211,6 +209,78 @@
         const licenseKeysContainer = document.getElementById('license-keys-container');
         const template = document.getElementById('license-key-template');
         const singleGenerateBtn = document.getElementById('generate-license-key-single');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // Handle source user change for share license mode
+        const sourceUserSelect = document.getElementById('source_user_id');
+        const shareProductSelect = document.getElementById('share_product_id');
+        const assignUserSelect = document.getElementById('assign_user_id');
+        
+        if (sourceUserSelect && shareProductSelect) {
+            sourceUserSelect.addEventListener('change', async function() {
+                const userId = this.value;
+                shareProductSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                if (!userId) {
+                    shareProductSelect.innerHTML = '<option value="">First select a source client</option>';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/licenses/user-products/${userId}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch products');
+                    }
+                    
+                    const products = await response.json();
+                    
+                    if (products.length === 0) {
+                        shareProductSelect.innerHTML = '<option value="">No products with licenses found for this client</option>';
+                        return;
+                    }
+                    
+                    shareProductSelect.innerHTML = '<option value="">Select product</option>';
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.id;
+                        option.textContent = `${product.name} - ${product.code}`;
+                        shareProductSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    shareProductSelect.innerHTML = '<option value="">Error loading products</option>';
+                }
+            });
+        }
+
+        // Validate that assign_user_id is different from source_user_id
+        const validateShareLicenseUsers = () => {
+            const sourceUserId = sourceUserSelect?.value;
+            const assignUserId = assignUserSelect?.value;
+            
+            if (sourceUserId && assignUserId && sourceUserId === assignUserId) {
+                submitBtn.disabled = true;
+                submitBtn.title = 'Source and assign users must be different';
+                return false;
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.title = '';
+            return true;
+        };
+
+        if (assignUserSelect) {
+            assignUserSelect.addEventListener('change', validateShareLicenseUsers);
+        }
+        if (sourceUserSelect) {
+            sourceUserSelect.addEventListener('change', validateShareLicenseUsers);
+        }
 
         const generateLocalGroup = () => {
             const bytes = new Uint8Array(2);
@@ -228,7 +298,33 @@
                 .toUpperCase();
         };
 
-        const generateFallbackKey = () => Array.from({ length: 4 }, generateLocalGroup).join('-');
+        const generateKey = () => {
+            const keyLength = {{ (int)$licenseKeyLength }};
+            const bytes = Math.ceil(keyLength / 2); // 2 hex chars per byte
+            const randomBytes = new Uint8Array(bytes);
+            
+            if (window.crypto?.getRandomValues) {
+                window.crypto.getRandomValues(randomBytes);
+            } else {
+                for (let i = 0; i < randomBytes.length; i++) {
+                    randomBytes[i] = Math.floor(Math.random() * 256);
+                }
+            }
+            
+            // Convert to hex string
+            let hex = Array.from(randomBytes)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('')
+                .toUpperCase();
+            
+            // Trim to exact length
+            hex = hex.substring(0, keyLength);
+            
+            // Format as XXXX-XXXX-XXXX-... (groups of 4)
+            return hex.match(/.{1,4}/g).join('-');
+        };
+
+        const generateFallbackKey = () => generateKey();
 
         const clearGeneratedArea = () => {
             generatedContainer.innerHTML = '';
@@ -304,6 +400,14 @@
 
         const rebuildLicenseFields = () => {
             if (!licenseKeysContainer || !template) return;
+            
+            // Check if no_license_key is checked
+            const noLicenseKeyCheckbox = document.getElementById('no_license_key');
+            if (noLicenseKeyCheckbox && noLicenseKeyCheckbox.checked) {
+                licenseKeysContainer.innerHTML = '';
+                return;
+            }
+            
             const quantityInput = document.getElementById('quantity');
             const quantity = Math.max(1, Number(quantityInput?.value || 1));
 
@@ -321,8 +425,78 @@
 
         const qtyEl = document.getElementById('quantity');
         qtyEl?.addEventListener('input', () => rebuildLicenseFields());
+        
+        // Rebuild license fields when no_license_key checkbox changes
+        const noLicenseKeyCheckbox = document.getElementById('no_license_key');
+        noLicenseKeyCheckbox?.addEventListener('change', () => rebuildLicenseFields());
 
         form?.addEventListener('submit', async (e) => {
+            // Check if no_license_key is checked
+            const noLicenseKeyCheckbox = document.getElementById('no_license_key');
+            const licenseMode = document.querySelector('input[name="license_mode"]:checked')?.value;
+            
+            // For share_license mode, let form submit normally
+            if (licenseMode === 'share_license') {
+                return;
+            }
+            
+            if (noLicenseKeyCheckbox && noLicenseKeyCheckbox.checked) {
+                // For no_license_key scenario, we still need to submit via batch API
+                // but with no license_keys
+                e.preventDefault();
+
+                const batchUrl = form.dataset.batchUrl;
+                const csrfToken = form.dataset.token;
+
+                if (!batchUrl || !csrfToken) {
+                    form.submit();
+                    return;
+                }
+
+                const quantityInput = document.getElementById('quantity');
+                const quantity = Number(quantityInput?.value || 1) || 1;
+
+                const payload = {
+                    user_id: document.getElementById('user_id')?.value,
+                    license_type_id: document.getElementById('license_type_id')?.value,
+                    product_id: document.getElementById('product_id')?.value,
+                    sub_product_id: document.getElementById('sub_product_id')?.value || null,
+                    quantity: document.getElementById('quantity')?.value,
+                    max_activations: document.getElementById('max_activations')?.value || null,
+                    expired_date: document.getElementById('expired_date')?.value || null,
+                    license_count: Number(quantity),
+                    no_license_key: true,
+                };
+
+                try {
+                    const resp = await fetch(batchUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const json = await resp.json();
+
+                    if (!resp.ok) {
+                        throw new Error(json.message || 'Batch create failed');
+                    }
+
+                    if (json.redirect) {
+                        window.location.href = json.redirect;
+                        return;
+                    }
+
+                    window.location.reload();
+                } catch (error) {
+                    alert(error.message || 'Unable to create licenses.');
+                }
+                return;
+            }
+            
             const quantityInput = document.getElementById('quantity');
             const quantity = Number(quantityInput?.value || 1) || 1;
             const licenseKeyInputs = document.querySelectorAll('input[name="license_keys[]"]');

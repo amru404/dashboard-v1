@@ -46,9 +46,18 @@ class ProductController extends Controller
 
         $product = Product::query()->create($data);
 
-        return redirect()
+        // Process sub-products if provided
+        $subProductsErrors = $this->processSubProducts($request, $product);
+
+        $redirectResponse = redirect()
             ->route('admin.products.show', $product)
             ->with('status', 'Product created.');
+
+        if (! empty($subProductsErrors)) {
+            $redirectResponse->with('sub_product_errors', $subProductsErrors);
+        }
+
+        return $redirectResponse;
     }
 
     public function show(Product $product): View
@@ -86,9 +95,18 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return redirect()
+        // Process sub-products if provided
+        $subProductsErrors = $this->processSubProducts($request, $product);
+
+        $redirectResponse = redirect()
             ->route('admin.products.show', $product)
             ->with('status', 'Product updated.');
+
+        if (! empty($subProductsErrors)) {
+            $redirectResponse->with('sub_product_errors', $subProductsErrors);
+        }
+
+        return $redirectResponse;
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -227,5 +245,130 @@ class ProductController extends Controller
             ->when($excludedProduct, fn ($query) => $query->whereKeyNot($excludedProduct->getKey()))
             ->pluck('code')
             ->all();
+    }
+
+    /**
+     * Process sub-products from the request and create/link them to the parent product.
+     * @return array<string>
+     */
+    private function processSubProducts(Request $request, Product $product): array
+    {
+        $subProducts = (array) $request->input('sub_products', []);
+        $errors = [];
+
+        if (empty($subProducts)) {
+            return $errors;
+        }
+
+        foreach ($subProducts as $index => $subProductData) {
+            if (! is_array($subProductData)) {
+                continue;
+            }
+
+            $type = $subProductData['type'] ?? 'new';
+
+            if ($type === 'new') {
+                // Create a new sub-product
+                $name = trim($subProductData['name'] ?? '');
+                $code = trim($subProductData['code'] ?? '');
+
+                if (blank($name)) {
+                    continue; // Skip if no name provided
+                }
+
+                // Generate code if not provided
+                if (blank($code)) {
+                    $code = $this->uniqueCodeFromName($name);
+                } else {
+                    $code = $this->normalizeProductId($code);
+                    
+                    // Verify the code doesn't already exist
+                    if (blank($code) || Product::query()->where('code', $code)->exists()) {
+                        // If normalized code is empty or already exists, generate a unique one
+                        $code = $this->uniqueCodeFromName($name);
+                    }
+                }
+
+                if (! blank($code)) {
+                    // Create the sub-product with validation
+                    try {
+                        Product::create([
+                            'parent_id' => $product->id,
+                            'name' => $name,
+                            'code' => $code,
+                            'is_active' => true,
+                        ]);
+                    } catch (\Exception $e) {
+                        $errors[] = "Failed to create sub-product '{$name}' (ID: {$code}): " . $e->getMessage();
+                        
+                        // Log error for debugging
+                        \Log::warning('Failed to create sub-product', [
+                            'parent_id' => $product->id,
+                            'name' => $name,
+                            'code' => $code,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                } else {
+                    $errors[] = "Sub-product '{$name}' has an invalid product ID.";
+                }
+            } elseif ($type === 'existing') {
+                // Link an existing product as a sub-product
+                $existingId = intval($subProductData['existing_id'] ?? 0);
+
+                if ($existingId > 0) {
+                    $existingProduct = Product::query()->find($existingId);
+
+                    if ($existingProduct) {
+                        if ($this->parentWouldCreateCycle($existingProduct, $product->id)) {
+                            $errors[] = "Cannot link '{$existingProduct->name}' as a sub-product: it would create a circular hierarchy.";
+                        } else {
+                            try {
+                                $existingProduct->update(['parent_id' => $product->id]);
+                            } catch (\Exception $e) {
+                                $errors[] = "Failed to link '{$existingProduct->name}' as sub-product: " . $e->getMessage();
+                                
+                                \Log::warning('Failed to link existing product as sub-product', [
+                                    'parent_id' => $product->id,
+                                    'existing_product_id' => $existingId,
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
+                        }
+                    } else {
+                        $errors[] = "Selected product (ID: {$existingId}) not found.";
+                    }
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    public function getSubProducts(Product $product): \Illuminate\Http\JsonResponse
+    {
+        $subProducts = $product->allChildren()
+            ->active()
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($sp) => [
+                'id' => $sp->id,
+                'name' => $sp->name,
+                'code' => $sp->code,
+            ]);
+
+        return response()->json($subProducts);
+    }
+
+    /**
+     * Get license key length setting for bulk generation
+     */
+    public function getLicenseKeyLength(): \Illuminate\Http\JsonResponse
+    {
+        $keyLength = \App\Models\Setting::get('license_key_length', 32);
+        
+        return response()->json([
+            'key_length' => (int) $keyLength,
+        ]);
     }
 }

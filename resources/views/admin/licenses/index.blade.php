@@ -13,12 +13,6 @@
             </p>
         </div>
         <div class="flex gap-2 shrink-0 flex-wrap">
-            <a href="{{ route('admin.licenses.generate-bulk') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                Generate Bulk
-            </a>
             <a href="{{ route('admin.licenses.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -61,7 +55,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="flex items-center gap-3">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
                             {{ $userLicenses->count() }} license{{ $userLicenses->count() !== 1 ? 's' : '' }}
@@ -102,9 +95,20 @@
                                     @endif
                                 </div>
                             </div>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
-                                {{ $productLicenses->count() }}
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('admin.licenses.generate-bulk', ['user_id' => $userId, 'product_id' => $productId]) }}" 
+                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-vd-primary hover:bg-vd-primary/90 text-white transition-colors"
+                                   onclick="event.stopPropagation()"
+                                   title="Generate bulk licenses for sub-products">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Key
+                                </a>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                                    {{ $productLicenses->count() }}
+                                </span>
+                            </div>
                         </button>
 
                         <!-- Product Licenses Table (Accordion Content) -->

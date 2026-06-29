@@ -69,7 +69,7 @@ class LicenseController extends Controller
         ]);
     }
 
-    public function generateBulk(): View
+    public function generateBulk(Request $request): View
     {
         $products = Product::query()
             ->whereNull('parent_id')
@@ -88,10 +88,11 @@ class LicenseController extends Controller
             'licenseTypes' => LicenseType::query()
                 ->orderBy('name')
                 ->get(),
+            'licenseKeyLength' => \App\Models\Setting::get('license_key_length', 32),
         ]);
     }
 
-    public function bulkStore(Request $request): RedirectResponse
+    public function bulkStore(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'user_id' => [
@@ -99,55 +100,68 @@ class LicenseController extends Controller
                 'integer',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
             ],
+            'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
             'license_type_id' => ['required', 'integer', Rule::exists('license_types', 'id')],
             'max_activations' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'expired_date' => ['nullable', 'date'],
-            'products' => ['required', 'array', 'min:1'],
-            'products.*' => ['required', 'json'],
+            'licenses' => ['required', 'array', 'min:1'],
+            'licenses.*.sub_product_id' => ['required', 'integer', Rule::exists('products', 'id')],
+            'licenses.*.license_key' => ['required', 'string', 'max:255'],
         ]);
 
         $user = User::query()->findOrFail((int) $data['user_id']);
         $clientName = $user->organization?->name ?? $user->name;
+        $parentProduct = Product::query()->findOrFail((int) $data['product_id']);
+
+        // Validate all sub-products are descendants of the parent product
+        $allowedSubProductIds = $parentProduct->getAllDescendantIds();
+        foreach ($data['licenses'] as $licenseData) {
+            if (!in_array((int) $licenseData['sub_product_id'], $allowedSubProductIds, true)) {
+                throw ValidationException::withMessages([
+                    'licenses' => 'One or more sub-products are not descendants of the selected parent product.',
+                ]);
+            }
+        }
+
+        // Validate all license keys are unique
+        $providedKeys = array_map(fn($l) => License::normalizeLicenseKey($l['license_key']), $data['licenses']);
+        $providedKeyHashes = array_map(fn($k) => License::licenseKeyHash($k), $providedKeys);
+        
+        $existingCount = License::query()
+            ->whereIn('license_key_hash', $providedKeyHashes)
+            ->count();
+            
+        if ($existingCount > 0) {
+            throw ValidationException::withMessages([
+                'licenses' => 'One or more license keys already exist in the system.',
+            ]);
+        }
 
         $createdLicenses = collect();
 
         DB::transaction(function () use ($data, $clientName, &$createdLicenses): void {
-            foreach ($data['products'] as $productJson) {
-                $productData = json_decode($productJson, true);
-                $productId = (int) $productData['product_id'];
-                $quantity = (int) $productData['quantity'];
-
-                $product = Product::query()->findOrFail($productId);
-
-                // Validate product exists and is active
-                if (! $product->is_active) {
-                    throw ValidationException::withMessages([
-                        'products' => 'One or more selected products are inactive.',
-                    ]);
-                }
-
-                // Determine if this is a sub-product or main product
-                $mainProductId = $product->parent_id ?? $product->id;
-                $subProductId = $product->parent_id ? $product->id : null;
-
-                // Generate licenses for the quantity
-                for ($i = 0; $i < $quantity; $i++) {
-                    $licenseKey = $this->uniqueGeneratedKey();
-
-                    $createdLicenses->push(License::query()->create([
-                        'user_id' => (int) $data['user_id'],
-                        'product_id' => $mainProductId,
-                        'sub_product_id' => $subProductId,
-                        'license_type_id' => (int) $data['license_type_id'],
-                        'license_key' => $licenseKey,
-                        'client_name' => $clientName,
-                        'quantity' => 1,
-                        'max_activations' => $data['max_activations'] ?? null,
-                        'expired_date' => $data['expired_date'] ?? null,
-                    ]));
-                }
+            foreach ($data['licenses'] as $licenseData) {
+                $createdLicenses->push(License::query()->create([
+                    'user_id' => (int) $data['user_id'],
+                    'product_id' => (int) $data['product_id'],
+                    'sub_product_id' => (int) $licenseData['sub_product_id'],
+                    'license_type_id' => (int) $data['license_type_id'],
+                    'license_key' => $licenseData['license_key'],
+                    'client_name' => $clientName,
+                    'quantity' => 1,
+                    'max_activations' => $data['max_activations'] ?? null,
+                    'expired_date' => $data['expired_date'] ?? null,
+                ]));
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'created' => $createdLicenses->count(),
+                'message' => 'Generated '.$createdLicenses->count().' licenses successfully.',
+            ]);
+        }
 
         return redirect()
             ->route('admin.licenses.index')
@@ -156,6 +170,7 @@ class LicenseController extends Controller
 
     public function generateKey(Request $request): JsonResponse|RedirectResponse
     {
+
         $quantity = (int) $request->input('quantity', 1);
         $quantity = max(1, min(100, $quantity));
 
@@ -178,11 +193,36 @@ class LicenseController extends Controller
             ->with('generated_license_key', $keys[0]);
     }
 
+    public function getUserProducts(User $user): JsonResponse
+    {
+        // Get all unique products (parent products only) that this user has licenses for
+        $products = License::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('license_key')
+            ->with('product')
+            ->get()
+            ->pluck('product')
+            ->unique('id')
+            ->filter(fn ($product) => $product !== null)
+            ->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'code' => $product->code,
+            ])
+            ->sortBy('name')
+            ->values();
+
+        return response()->json($products);
+    }
+
     public function store(Request $request): RedirectResponse
     {
-        if ($request->has('license_keys')) {
+        // Handle batch creation when license_keys array is provided or no_license_key is checked
+        if (($request->has('license_keys') && is_array($request->input('license_keys'))) || ($request->boolean('no_license_key'))) {
+            $licenseCount = $request->input('license_count', count($request->input('license_keys', [])));
             $request->merge([
-                'license_count' => count($request->input('license_keys', [])),
+                'license_count' => $licenseCount,
+                'license_mode' => 'new_license', // Ensure license_mode is set for batch creation
             ]);
 
             $data = $this->validatedBatchData($request);
@@ -191,20 +231,33 @@ class LicenseController extends Controller
             $data['client_name'] = $this->clientNameForUser((int) $data['user_id']);
             $licenseCount = (int) $data['license_count'];
             $providedKeys = $data['license_keys'] ?? null;
+            $noLicenseKey = (bool) ($data['no_license_key'] ?? false);
 
-            unset($data['license_count'], $data['license_keys']);
+            // Normalize provided keys
+            if (is_array($providedKeys)) {
+                $providedKeys = array_values($providedKeys);
+            }
 
-            $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys): Collection {
+            unset($data['license_count'], $data['license_keys'], $data['no_license_key']);
+            
+            $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys, $noLicenseKey): Collection {
                 return collect(range(1, $licenseCount))
-                    ->map(function ($i) use ($data, $providedKeys): License {
+                    ->map(function ($i) use ($data, $providedKeys, $noLicenseKey): License {
                         $key = null;
 
-                        if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
-                            $key = (string) $providedKeys[$i - 1];
-                        }
+                        // If no_license_key is true, set key to null
+                        if ($noLicenseKey) {
+                            $key = null;
+                        } else {
+                            // Check if a key was provided
+                            if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
+                                $key = (string) $providedKeys[$i - 1];
+                            }
 
-                        if (! $key) {
-                            $key = $this->uniqueGeneratedKey();
+                            // If no key provided, generate one
+                            if (! $key) {
+                                $key = $this->uniqueGeneratedKey();
+                            }
                         }
 
                         return License::query()->create(array_merge($data, [
@@ -212,6 +265,13 @@ class LicenseController extends Controller
                         ]));
                     });
             });
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'created' => $createdLicenses->count(),
+                    'redirect' => route('admin.licenses.index'),
+                ]);
+            }
 
             return redirect()
                 ->route('admin.licenses.index')
@@ -226,9 +286,15 @@ class LicenseController extends Controller
             $assignUser = User::query()->with('organization')->findOrFail((int) $data['assign_user_id']);
             
             // Find existing license from source user for this product
+            // Only get licenses that match the product_id (considering both parent and sub-product scenarios)
             $sourceLicense = License::query()
                 ->where('user_id', (int) $data['source_user_id'])
-                ->where('product_id', (int) $data['share_product_id'])
+                ->where(function ($query) use ($data) {
+                    $productId = (int) $data['share_product_id'];
+                    $query->where('product_id', $productId)
+                          ->orWhere('sub_product_id', $productId);
+                })
+                ->whereNotNull('license_key')
                 ->first();
 
             if (! $sourceLicense) {
@@ -237,11 +303,24 @@ class LicenseController extends Controller
                 ]);
             }
 
+            // Determine the correct product_id and sub_product_id based on the selected product
+            $selectedProduct = Product::query()->findOrFail((int) $data['share_product_id']);
+            
+            // If the selected product is a parent product, use it as product_id
+            // If it's a sub-product, find its parent and use that as product_id
+            if ($selectedProduct->parent_id === null) {
+                $targetProductId = $selectedProduct->id;
+                $targetSubProductId = null;
+            } else {
+                $targetProductId = $selectedProduct->parent_id;
+                $targetSubProductId = $selectedProduct->id;
+            }
+
             // Create a new license with the same key for the assign user
             $license = License::query()->create([
                 'user_id' => (int) $data['assign_user_id'],
-                'product_id' => $sourceLicense->product_id,
-                'sub_product_id' => $sourceLicense->sub_product_id,
+                'product_id' => $targetProductId,
+                'sub_product_id' => $targetSubProductId,
                 'license_type_id' => $sourceLicense->license_type_id,
                 'license_key' => $sourceLicense->license_key,
                 'client_name' => $assignUser->organization?->name ?? $assignUser->name,
@@ -274,7 +353,7 @@ class LicenseController extends Controller
         }
 
         // Remove fields not in License fillable
-        $data = array_filter($data, fn ($key) => !in_array($key, ['license_mode', 'no_license_key']), ARRAY_FILTER_USE_KEY);
+        $data = array_filter($data, fn ($key) => !in_array($key, ['license_mode', 'no_license_key', 'source_user_id', 'share_product_id', 'assign_user_id'], true), ARRAY_FILTER_USE_KEY);
 
         $license = License::query()->create($data);
 
@@ -291,24 +370,33 @@ class LicenseController extends Controller
         $data['client_name'] = $this->clientNameForUser((int) $data['user_id']);
         $licenseCount = (int) $data['license_count'];
         $providedKeys = $data['license_keys'] ?? null;
+        $noLicenseKey = (bool) ($data['no_license_key'] ?? false);
+        
         // normalize provided keys
         if (is_array($providedKeys)) {
             $providedKeys = array_values($providedKeys);
         }
 
-        unset($data['license_count'], $data['license_keys']);
+        unset($data['license_count'], $data['license_keys'], $data['no_license_key']);
 
-        $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys): Collection {
+        $createdLicenses = DB::transaction(function () use ($data, $licenseCount, $providedKeys, $noLicenseKey): Collection {
             return collect(range(1, $licenseCount))
-                ->map(function ($i) use ($data, $providedKeys): License {
+                ->map(function ($i) use ($data, $providedKeys, $noLicenseKey): License {
                     $key = null;
 
-                    if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
-                        $key = (string) $providedKeys[$i - 1];
-                    }
+                    // If no_license_key is true, set key to null
+                    if ($noLicenseKey) {
+                        $key = null;
+                    } else {
+                        // Check if a key was provided
+                        if (is_array($providedKeys) && array_key_exists($i - 1, $providedKeys) && trim((string) $providedKeys[$i - 1]) !== '') {
+                            $key = (string) $providedKeys[$i - 1];
+                        }
 
-                    if (! $key) {
-                        $key = $this->uniqueGeneratedKey();
+                        // If no key provided, generate one
+                        if (! $key) {
+                            $key = $this->uniqueGeneratedKey();
+                        }
                     }
 
                     return License::query()->create(array_merge($data, [
@@ -505,6 +593,11 @@ class LicenseController extends Controller
      */
     private function validatedData(Request $request, ?License $license = null, bool $licenseKeyRequired = false): array
     {
+        // If no_license_key is checked, license key is not required
+        if ($request->boolean('no_license_key')) {
+            $licenseKeyRequired = false;
+        }
+        
         $baseRules = [
             'license_mode' => ['required', Rule::in(['new_license', 'share_license'])],
             'user_id' => [
@@ -538,13 +631,29 @@ class LicenseController extends Controller
                     }
                 },
             ],
+            'license_keys' => ['nullable', 'array'],
+            'license_keys.*' => ['nullable', 'string', 'max:255'],
             // Share License Fields
             'source_user_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('users', 'id')],
             'share_product_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('products', 'id')],
             'assign_user_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('users', 'id')],
         ];
 
-        return $request->validate($baseRules);
+        $validated = $request->validate($baseRules);
+
+        // Additional validation for share_license mode
+        if ($request->input('license_mode') === 'share_license') {
+            $sourceUserId = (int) $validated['source_user_id'];
+            $assignUserId = (int) $validated['assign_user_id'];
+
+            if ($sourceUserId === $assignUserId) {
+                throw ValidationException::withMessages([
+                    'assign_user_id' => 'The assign user must be different from the source user.',
+                ]);
+            }
+        }
+
+        return $validated;
     }
 
     /**
@@ -553,6 +662,7 @@ class LicenseController extends Controller
     private function validatedBatchData(Request $request): array
     {
         return $request->validate([
+            'license_mode' => ['nullable', Rule::in(['new_license', 'share_license'])],
             'user_id' => [
                 'required',
                 'integer',
@@ -567,7 +677,7 @@ class LicenseController extends Controller
             'expired_date' => ['nullable', 'date'],
             'license_count' => ['required', 'integer', 'min:1', 'max:100'],
             'license_keys' => ['nullable', 'array'],
-            'license_keys.*' => ['string', 'max:255'],
+            'license_keys.*' => ['nullable', 'string', 'max:255'],
         ]);
     }
 
@@ -605,6 +715,7 @@ class LicenseController extends Controller
                 ->orderBy('name')
                 ->get(),
             'productOptions' => $this->productTreeBuilder->options(parentOnly: true),
+            'licenseKeyLength' => \App\Models\Setting::get('license_key_length', 32),
         ];
     }
 

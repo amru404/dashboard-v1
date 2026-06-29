@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::put('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
         Route::resource('organizations', OrganizationController::class);
         Route::resource('users', UserController::class);
+        Route::get('products/{product}/sub-products', [ProductController::class, 'getSubProducts'])->name('products.sub-products');
         Route::resource('products', ProductController::class);
         Route::resource('license-types', LicenseTypeController::class);
         Route::post('licenses/generate-key', [LicenseController::class, 'generateKey'])->name('licenses.generate-key');
@@ -53,6 +54,7 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::post('licenses/batch-store', [LicenseController::class, 'batchStore'])->name('licenses.batch-store');
         Route::get('licenses/generate-bulk', [LicenseController::class, 'generateBulk'])->name('licenses.generate-bulk');
         Route::post('licenses/bulk-store', [LicenseController::class, 'bulkStore'])->name('licenses.bulk-store');
+        Route::get('licenses/user-products/{user}', [LicenseController::class, 'getUserProducts'])->name('licenses.user-products');
         Route::get('licenses/{license}/add-keys', [LicenseController::class, 'addKeys'])->name('licenses.add-keys');
         Route::post('licenses/{license}/store-keys', [LicenseController::class, 'storeKeys'])->name('licenses.store-keys');
         Route::get('licenses/{license}/show-key', [LicenseController::class, 'showKey'])->name('licenses.show-key');

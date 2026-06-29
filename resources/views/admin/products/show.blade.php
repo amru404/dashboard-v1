@@ -3,6 +3,8 @@
 @section('title', $product->name)
 
 @section('content')
+    <x-alert />
+
     <x-page-header title="{{ $product->name }}" subtitle="Product details and recursive child products.">
         <x-slot name="actions">
             <x-button variant="ghost" :href="route('admin.products.index')">Product tree</x-button>
