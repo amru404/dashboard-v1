@@ -347,15 +347,40 @@ class ProductController extends Controller
 
     public function getSubProducts(Product $product): \Illuminate\Http\JsonResponse
     {
-        $subProducts = $product->allChildren()
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($sp) => [
-                'id' => $sp->id,
-                'name' => $sp->name,
-                'code' => $sp->code,
-            ]);
+        $subProducts = $product->getFlatDescendants()
+            ->map(function ($sp) {
+                $depth = $sp->getAttribute('tree_depth') ?? 0;
+                
+                // Generate depth label
+                $depthLabel = match ($depth) {
+                    0 => 'Sub-product',
+                    1 => 'Sub-sub-product',
+                    default => 'Sub-' . str_repeat('sub-', $depth) . 'product',
+                };
+                
+                // Generate breadcrumb (parent hierarchy)
+                $breadcrumbs = $sp->getBreadcrumbs();
+                $breadcrumb = '';
+                
+                if ($breadcrumbs->count() > 1) {
+                    // Get parent names (exclude self and root)
+                    $parents = $breadcrumbs->slice(1, -1);
+                    if ($parents->isNotEmpty()) {
+                        $breadcrumb = $parents->map(fn($p) => $p->name)->implode(' → ') . ' ' . $depthLabel . ' of ' . $breadcrumbs->first()->name;
+                    } else {
+                        $breadcrumb = $depthLabel . ' of ' . $breadcrumbs->first()->name;
+                    }
+                }
+                
+                return [
+                    'id' => $sp->id,
+                    'name' => $sp->name,
+                    'code' => $sp->code,
+                    'depth' => $depth,
+                    'depthLabel' => $depthLabel,
+                    'breadcrumb' => $breadcrumb,
+                ];
+            });
 
         return response()->json($subProducts);
     }

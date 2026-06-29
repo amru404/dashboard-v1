@@ -52,6 +52,7 @@
             <div x-show="subProducts.length > 0" class="space-y-2">
                 <template x-for="(subProduct, index) in subProducts" :key="subProduct.id">
                     <div class="rounded-lg border p-4 transition-colors"
+                         :style="`margin-left: ${subProduct.depth * 16}px`"
                          :class="subProduct.selected ? 'border-blue-500 bg-blue-500/5' : 'border-[#2a3f5f] bg-[#0f1829]/50'">
                         <div class="flex items-center justify-between gap-4">
                             <label class="flex items-center gap-3 flex-1 cursor-pointer">
@@ -61,16 +62,19 @@
                                     @change="updateSelection"
                                     class="w-4 h-4 rounded border-gray-600 bg-[#0f1829] text-vd-primary focus:ring-vd-primary focus:ring-offset-0"
                                 >
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-white" x-text="subProduct.name"></p>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <p class="text-sm font-medium text-white" x-text="subProduct.name"></p>
+                                        <span class="text-xs text-gray-500 whitespace-nowrap" x-text="subProduct.breadcrumb ? `is ${subProduct.breadcrumb}` : ''"></span>
+                                    </div>
                                     <p class="text-xs text-gray-400" x-text="subProduct.code"></p>
                                 </div>
-                                <span class="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                    Sub-product
+                                <span class="px-2.5 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 whitespace-nowrap flex-shrink-0"
+                                      x-text="subProduct.depthLabel">
                                 </span>
                             </label>
                             
-                            <div x-show="subProduct.selected" class="flex items-center gap-2">
+                            <div x-show="subProduct.selected" class="flex items-center gap-2 flex-shrink-0">
                                 <button 
                                     type="button"
                                     @click="decreaseQty(index)"
