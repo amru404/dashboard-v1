@@ -106,66 +106,6 @@
 
     <x-card class="mt-6 overflow-hidden p-0">
         <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
-            <h2 class="text-lg font-bold text-madani-deep">Sub-product licenses</h2>
-            <p class="mt-1 text-sm text-madani-muted">License keys issued for sub-products under this parent product.</p>
-        </div>
-
-        @php
-            $subProductLicenses = \App\Models\License::query()
-                ->where('product_id', $license->product_id)
-                ->where('sub_product_id', '!=', null)
-                ->where('user_id', $license->user_id)
-                ->with('subProduct')
-                ->orderBy('sub_product_id')
-                ->get();
-        @endphp
-
-        @if ($subProductLicenses->isEmpty())
-            <div class="px-6 py-10 text-center">
-                <p class="text-sm text-madani-muted">No sub-product keys added yet.</p>
-            </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-madani-border">
-                    <thead class="bg-vd-secondary">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Sub-Product</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">License Key</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Activations</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Status</th>
-                            <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-madani-border bg-vd-surface">
-                        @foreach ($subProductLicenses as $subLicense)
-                            <tr>
-                                <td class="px-6 py-4 text-sm text-madani-deep">{{ $subLicense->subProduct?->name ?? 'Unknown' }}</td>
-                                <td class="px-6 py-4 font-mono text-sm text-madani-muted">{{ $subLicense->masked_license_key }}</td>
-                                <td class="px-6 py-4 text-sm text-madani-muted">{{ $subLicense->activeActivationCount() }} / {{ $subLicense->max_activations ?? 'Unlimited' }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    @if ($subLicense->isExpired())
-                                        <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">Expired</span>
-                                    @else
-                                        <span class="rounded-full bg-madani-pale px-3 py-1 text-xs font-semibold text-madani-green">Active</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <form method="POST" action="{{ route('admin.licenses.destroy', $subLicense) }}" onsubmit="return confirm('Remove this sub-product license?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <x-button variant="ghost">Delete</x-button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-    </x-card>
-
-    <x-card class="mt-6 overflow-hidden p-0">
-        <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
             <h2 class="text-lg font-bold text-madani-deep">Activation records</h2>
             <p class="mt-1 text-sm text-madani-muted">Week 3 public activation will populate these records through the installer API.</p>
         </div>
@@ -212,23 +152,32 @@
         </div>
     </x-card>
 
-    <div id="reveal-key-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-madani-depth/70 px-4">
-        <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+    <div id="reveal-key-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+        <div class="w-full max-w-lg rounded-2xl bg-vd-surface border border-vd-border p-6 shadow-2xl">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-madani-deep">Plaintext license key</h2>
+                    <h2 class="text-xl font-bold text-madani-deep">Plaintext License Key</h2>
                     <p class="mt-2 text-sm leading-6 text-madani-muted">Use this only when customer support needs the original key.</p>
                 </div>
-                <button id="close-reveal-modal" type="button" class="rounded-lg px-3 py-2 text-sm font-semibold text-madani-muted hover:bg-madani-ghost">Close</button>
+                <button id="close-reveal-modal" type="button" class="rounded-lg px-3 py-2 text-sm font-semibold text-madani-muted hover:bg-madani-ghost transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
 
-            <div id="reveal-key-message" class="mt-5 rounded-xl border border-madani-border bg-madani-ghost px-4 py-3 font-mono text-sm font-semibold text-madani-deep">
+            <div id="reveal-key-message" class="mt-5 rounded-xl border border-vd-border bg-vd-secondary px-4 py-3 font-mono text-sm font-semibold text-madani-deep break-all">
                 Loading...
             </div>
 
             <div class="mt-6 flex flex-wrap gap-3">
-                <button id="copy-revealed-key" type="button" class="inline-flex items-center justify-center rounded-lg bg-madani-success px-5 py-3 text-sm font-semibold text-white transition hover:bg-madani-green">Copy key</button>
-                <button id="close-reveal-modal-secondary" type="button" class="inline-flex items-center justify-center rounded-lg border border-madani-deep px-5 py-3 text-sm font-semibold text-madani-deep transition hover:bg-madani-deep hover:text-white">Done</button>
+                <button id="copy-revealed-key" type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-vd-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-vd-primary/90">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Copy Key</span>
+                </button>
+                <button id="close-reveal-modal-secondary" type="button" class="inline-flex items-center justify-center rounded-lg border border-vd-border px-5 py-3 text-sm font-semibold text-madani-deep transition hover:bg-madani-ghost">Done</button>
             </div>
         </div>
     </div>
@@ -250,9 +199,19 @@
                 modal.classList.remove('flex');
                 revealedKey = '';
                 message.textContent = 'Loading...';
+                // Reset copy button text
+                const buttonText = copyButton.querySelector('span');
+                if (buttonText) buttonText.textContent = 'Copy Key';
             };
 
             closeButtons.forEach((closeButton) => closeButton?.addEventListener('click', closeModal));
+
+            // Close modal when clicking backdrop
+            modal?.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
 
             button?.addEventListener('click', async () => {
                 modal.classList.remove('hidden');
@@ -277,6 +236,7 @@
                 } catch (error) {
                     revealedKey = '';
                     message.textContent = error.message;
+                    message.classList.add('text-red-600');
                 }
             });
 
@@ -285,8 +245,18 @@
                     return;
                 }
 
-                await navigator.clipboard.writeText(revealedKey);
-                copyButton.textContent = 'Copied';
+                try {
+                    await navigator.clipboard.writeText(revealedKey);
+                    const buttonText = copyButton.querySelector('span');
+                    const originalText = buttonText.textContent;
+                    buttonText.textContent = 'Copied!';
+                    
+                    setTimeout(() => {
+                        buttonText.textContent = originalText;
+                    }, 2000);
+                } catch (error) {
+                    console.error('Failed to copy:', error);
+                }
             });
         })();
     </script>

@@ -93,7 +93,7 @@
         <x-input-error :messages="$errors->get('quantity')" class="mt-2" />
     </div>
 
-    <div>
+    <div class="col-span-2">
         <x-form-label for="max_activations" value="Max Device activations" />
         <x-form-input id="max_activations" name="max_activations" type="number" min="1" value="{{ old('max_activations', $license->max_activations) }}" placeholder="Unlimited when blank" class="mt-2" />
         <x-input-error :messages="$errors->get('max_activations')" class="mt-2" />
@@ -181,7 +181,22 @@
         <x-input-error :messages="$errors->get('share_product_id')" class="mt-2" />
     </div>
 
-    <div>
+    <!-- License Selection -->
+    <div id="license-selection-container" class="col-span-2 hidden bg-vd-surface rounded-xl border border-vd-border p-4">
+        <x-form-label value="Select Licenses to Share"/>
+        <p class="mt-2 text-xs text-madani-muted">Choose which licenses/sub-products to share with the selected user.</p>
+        
+        <div id="license-checkboxes" 
+            class="mt-4 space-y-3 pr-2" 
+            style="max-height: 240px !important; overflow-y: auto !important; display: block !important;">
+        </div>
+        <x-input-error :messages="$errors->get('share_license_ids')" class="mt-2" />
+    </div>
+
+
+
+
+    <div class="col-span-2">
         <x-form-label for="assign_user_id" value="Assign to User" />
         <select id="assign_user_id" name="assign_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'share_license'">
             <option value="">Select user to assign</option>
@@ -195,6 +210,7 @@
         <x-input-error :messages="$errors->get('assign_user_id')" class="mt-2" />
     </div>
 </div>
+
 
 </div>
 
@@ -216,11 +232,15 @@
         const sourceUserSelect = document.getElementById('source_user_id');
         const shareProductSelect = document.getElementById('share_product_id');
         const assignUserSelect = document.getElementById('assign_user_id');
+        const licenseSelectionContainer = document.getElementById('license-selection-container');
+        const licenseCheckboxes = document.getElementById('license-checkboxes');
         
         if (sourceUserSelect && shareProductSelect) {
             sourceUserSelect.addEventListener('change', async function() {
                 const userId = this.value;
                 shareProductSelect.innerHTML = '<option value="">Loading...</option>';
+                licenseSelectionContainer.classList.add('hidden');
+                licenseCheckboxes.innerHTML = '';
                 
                 if (!userId) {
                     shareProductSelect.innerHTML = '<option value="">First select a source client</option>';
@@ -228,7 +248,7 @@
                 }
                 
                 try {
-                    const response = await fetch(`/admin/licenses/user-products/${userId}`, {
+                    const response = await fetch(`/admin/licenses/user/${userId}/products`, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'Accept': 'application/json'
@@ -256,6 +276,65 @@
                 } catch (error) {
                     console.error('Error fetching products:', error);
                     shareProductSelect.innerHTML = '<option value="">Error loading products</option>';
+                }
+            });
+
+            // Handle product change to load licenses
+            shareProductSelect.addEventListener('change', async function() {
+                const productId = this.value;
+                const userId = sourceUserSelect.value;
+                licenseCheckboxes.innerHTML = '';
+                
+                if (!productId || !userId) {
+                    licenseSelectionContainer.classList.add('hidden');
+                    return;
+                }
+                
+                licenseCheckboxes.innerHTML = '<p class="text-sm text-gray-400">Loading licenses...</p>';
+                licenseSelectionContainer.classList.remove('hidden');
+                
+                try {
+                    const response = await fetch(`/admin/licenses/user/${userId}/product/${productId}/licenses`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch licenses');
+                    }
+                    
+                    const licenses = await response.json();
+                    
+                    if (licenses.length === 0) {
+                        licenseCheckboxes.innerHTML = '<p class="text-sm text-gray-400">No licenses found</p>';
+                        return;
+                    }
+                    
+                    licenseCheckboxes.innerHTML = '';
+                    licenses.forEach(license => {
+                        const checkboxDiv = document.createElement('label');
+                        checkboxDiv.className = 'flex items-start gap-3 p-3 rounded-lg border border-vd-border hover:bg-white/5 cursor-pointer transition';
+                        
+                        checkboxDiv.innerHTML = `
+                            <input 
+                                type="checkbox" 
+                                name="share_license_ids[]" 
+                                value="${license.id}"
+                                class="mt-1 rounded border-gray-600 text-vd-primary focus:ring-vd-primary focus:ring-offset-0"
+                            />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-white">${license.full_path}</p>
+                                <p class="text-xs text-gray-400 mt-1">Key: ${license.masked_key}</p>
+                            </div>
+                        `;
+                        
+                        licenseCheckboxes.appendChild(checkboxDiv);
+                    });
+                } catch (error) {
+                    console.error('Error fetching licenses:', error);
+                    licenseCheckboxes.innerHTML = '<p class="text-sm text-red-400">Error loading licenses</p>';
                 }
             });
         }

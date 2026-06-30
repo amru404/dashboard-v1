@@ -178,8 +178,17 @@ class LicenseController extends Controller
 
         $keys = collect(range(1, $quantity))
             ->map(fn () => $this->uniqueGeneratedKey())
+            ->unique() // Ensure no duplicates in the batch
             ->values()
             ->all();
+        
+        // If duplicates were removed, generate more to reach the required quantity
+        while (count($keys) < $quantity) {
+            $newKey = $this->uniqueGeneratedKey();
+            if (!in_array($newKey, $keys, true)) {
+                $keys[] = $newKey;
+            }
+        }
 
         if ($request->expectsJson()) {
             if ($quantity === 1) {
@@ -197,24 +206,76 @@ class LicenseController extends Controller
 
     public function getUserProducts(User $user): JsonResponse
     {
-        // Get all unique products (parent products only) that this user has licenses for
-        $products = License::query()
-            ->where('user_id', $user->id)
-            ->whereNotNull('license_key')
-            ->with('product')
-            ->get()
-            ->pluck('product')
-            ->unique('id')
-            ->filter(fn ($product) => $product !== null)
-            ->map(fn ($product) => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'code' => $product->code,
-            ])
-            ->sortBy('name')
-            ->values();
+        try {
+            // Get all unique parent products that this user has licenses for
+            $licenses = License::query()
+                ->where('user_id', $user->id)
+                ->whereNotNull('license_key')
+                ->with('product')
+                ->get();
 
-        return response()->json($products);
+            \Log::info('getUserProducts', [
+                'user_id' => $user->id,
+                'total_licenses' => $licenses->count(),
+            ]);
+
+            // Collect unique parent product IDs
+            $productIds = $licenses->map(function ($license) {
+                return $license->product_id; // Always use the parent product_id
+            })->unique()->filter();
+
+            \Log::info('Product IDs', ['ids' => $productIds->toArray()]);
+
+            // Get the products
+            $products = Product::query()
+                ->whereIn('id', $productIds)
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($product) => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                ])
+                ->values();
+
+            \Log::info('Final products', ['count' => $products->count()]);
+
+            return response()->json($products);
+        } catch (\Exception $e) {
+            \Log::error('getUserProducts error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getUserProductLicenses(User $user, Product $product): JsonResponse
+    {
+        // Get all licenses for this user and product (including sub-products)
+        $licenses = License::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) use ($product) {
+                $query->where('product_id', $product->id)
+                      ->orWhere('sub_product_id', $product->id);
+            })
+            ->whereNotNull('license_key')
+            ->with(['product', 'subProduct'])
+            ->get()
+            ->map(fn ($license) => [
+                'id' => $license->id,
+                'product_id' => $license->product_id,
+                'sub_product_id' => $license->sub_product_id,
+                'product_name' => $license->subProduct ? $license->subProduct->name : $license->product->name,
+                'product_code' => $license->subProduct ? $license->subProduct->code : $license->product->code,
+                'masked_key' => $license->masked_license_key,
+                'full_path' => $license->subProduct 
+                    ? "{$license->product->name} / {$license->subProduct->name}"
+                    : $license->product->name,
+            ]);
+
+        return response()->json($licenses);
     }
 
     public function store(Request $request): RedirectResponse
@@ -226,73 +287,74 @@ class LicenseController extends Controller
             $sourceUser = User::query()->with('organization')->findOrFail((int) $data['source_user_id']);
             $assignUser = User::query()->with('organization')->findOrFail((int) $data['assign_user_id']);
             
-            // Find existing license from source user for this product
-            // Only get licenses that match the product_id (considering both parent and sub-product scenarios)
-            $sourceLicense = License::query()
-                ->where('user_id', (int) $data['source_user_id'])
-                ->where(function ($query) use ($data) {
-                    $productId = (int) $data['share_product_id'];
-                    $query->where('product_id', $productId)
-                          ->orWhere('sub_product_id', $productId);
-                })
-                ->whereNotNull('license_key')
-                ->first();
-
-            if (! $sourceLicense) {
-                throw ValidationException::withMessages([
-                    'source_user_id' => 'No license found for this product from the selected source client.',
-                ]);
-            }
-
-            // Determine the correct product_id and sub_product_id based on the selected product
-            $selectedProduct = Product::query()->findOrFail((int) $data['share_product_id']);
+            // Get selected license IDs
+            $licenseIds = $request->input('share_license_ids', []);
             
-            // If the selected product is a parent product, use it as product_id
-            // If it's a sub-product, find its parent and use that as product_id
-            if ($selectedProduct->parent_id === null) {
-                $targetProductId = $selectedProduct->id;
-                $targetSubProductId = null;
-            } else {
-                $targetProductId = $selectedProduct->parent_id;
-                $targetSubProductId = $selectedProduct->id;
-            }
-
-            // Check if this user already has this license key
-            $existingLicense = License::query()
-                ->where('user_id', (int) $data['assign_user_id'])
-                ->where('product_id', $targetProductId)
-                ->where(function ($query) use ($targetSubProductId) {
-                    if ($targetSubProductId) {
-                        $query->where('sub_product_id', $targetSubProductId);
-                    } else {
-                        $query->whereNull('sub_product_id');
-                    }
-                })
-                ->where('license_key_hash', License::licenseKeyHash($sourceLicense->license_key))
-                ->exists();
-
-            if ($existingLicense) {
+            if (empty($licenseIds)) {
                 throw ValidationException::withMessages([
-                    'assign_user_id' => 'This user already has this license key for this product.',
+                    'share_license_ids' => 'Please select at least one license to share.',
                 ]);
             }
+            
+            $createdCount = 0;
+            
+            DB::transaction(function () use ($licenseIds, $sourceUser, $assignUser, &$createdCount) {
+                foreach ($licenseIds as $licenseId) {
+                    $sourceLicense = License::query()->findOrFail((int) $licenseId);
+                    
+                    // Verify license belongs to source user
+                    if ($sourceLicense->user_id !== $sourceUser->id) {
+                        continue;
+                    }
+                    
+                    // Determine product IDs
+                    $targetProductId = $sourceLicense->product_id;
+                    $targetSubProductId = $sourceLicense->sub_product_id;
+                    
+                    // Check if this user already has this license key
+                    $existingLicense = License::query()
+                        ->where('user_id', $assignUser->id)
+                        ->where('product_id', $targetProductId)
+                        ->where(function ($query) use ($targetSubProductId) {
+                            if ($targetSubProductId) {
+                                $query->where('sub_product_id', $targetSubProductId);
+                            } else {
+                                $query->whereNull('sub_product_id');
+                            }
+                        })
+                        ->where('license_key_hash', License::licenseKeyHash($sourceLicense->license_key))
+                        ->exists();
+                    
+                    if ($existingLicense) {
+                        continue; // Skip duplicate
+                    }
+                    
+                    // Create new license
+                    License::query()->create([
+                        'user_id' => $assignUser->id,
+                        'product_id' => $targetProductId,
+                        'sub_product_id' => $targetSubProductId,
+                        'license_type_id' => $sourceLicense->license_type_id,
+                        'license_key' => $sourceLicense->license_key,
+                        'client_name' => $assignUser->organization?->name ?? $assignUser->name,
+                        'quantity' => 1,
+                        'max_activations' => $sourceLicense->max_activations,
+                        'expired_date' => $sourceLicense->expired_date,
+                    ]);
+                    
+                    $createdCount++;
+                }
+            });
 
-            // Create a new license with the same key for the assign user
-            $license = License::query()->create([
-                'user_id' => (int) $data['assign_user_id'],
-                'product_id' => $targetProductId,
-                'sub_product_id' => $targetSubProductId,
-                'license_type_id' => $sourceLicense->license_type_id,
-                'license_key' => $sourceLicense->license_key,
-                'client_name' => $assignUser->organization?->name ?? $assignUser->name,
-                'quantity' => 1,
-                'max_activations' => $sourceLicense->max_activations,
-                'expired_date' => $sourceLicense->expired_date,
-            ]);
+            if ($createdCount === 0) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'No licenses were shared. They may already exist for this user.');
+            }
 
             return redirect()
-                ->route('admin.licenses.show', $license)
-                ->with('status', 'License shared successfully.');
+                ->route('admin.licenses.index')
+                ->with('status', "{$createdCount} license(s) shared successfully.");
         }
 
         // Handle batch creation when license_keys array is provided or no_license_key is checked
@@ -310,9 +372,34 @@ class LicenseController extends Controller
             $providedKeys = $data['license_keys'] ?? null;
             $noLicenseKey = (bool) ($data['no_license_key'] ?? false);
 
-            // Normalize provided keys
+            // Normalize provided keys and check for uniqueness
             if (is_array($providedKeys)) {
                 $providedKeys = array_values($providedKeys);
+                
+                // Check uniqueness for provided keys (only for non-empty keys)
+                $nonEmptyKeys = array_filter($providedKeys, fn($key) => !blank($key));
+                if (!empty($nonEmptyKeys)) {
+                    $normalizedKeys = array_map(fn($key) => License::normalizeLicenseKey($key), $nonEmptyKeys);
+                    $keyHashes = array_map(fn($key) => License::licenseKeyHash($key), $normalizedKeys);
+                    
+                    // Check if any provided key already exists
+                    $existingCount = License::query()
+                        ->whereIn('license_key_hash', $keyHashes)
+                        ->count();
+                    
+                    if ($existingCount > 0) {
+                        throw ValidationException::withMessages([
+                            'license_keys' => 'One or more provided license keys already exist in the system.',
+                        ]);
+                    }
+                    
+                    // Check for duplicates within provided keys
+                    if (count($keyHashes) !== count(array_unique($keyHashes))) {
+                        throw ValidationException::withMessages([
+                            'license_keys' => 'Duplicate keys detected in your input. Each key must be unique.',
+                        ]);
+                    }
+                }
             }
 
             unset($data['license_keys'], $data['no_license_key'], $data['license_mode']);
@@ -396,6 +483,31 @@ class LicenseController extends Controller
         // normalize provided keys
         if (is_array($providedKeys)) {
             $providedKeys = array_values($providedKeys);
+            
+            // Check uniqueness for provided keys (only for non-empty keys)
+            $nonEmptyKeys = array_filter($providedKeys, fn($key) => !blank($key));
+            if (!empty($nonEmptyKeys)) {
+                $normalizedKeys = array_map(fn($key) => License::normalizeLicenseKey($key), $nonEmptyKeys);
+                $keyHashes = array_map(fn($key) => License::licenseKeyHash($key), $normalizedKeys);
+                
+                // Check if any provided key already exists
+                $existingCount = License::query()
+                    ->whereIn('license_key_hash', $keyHashes)
+                    ->count();
+                
+                if ($existingCount > 0) {
+                    throw ValidationException::withMessages([
+                        'license_keys' => 'One or more provided license keys already exist in the system.',
+                    ]);
+                }
+                
+                // Check for duplicates within provided keys
+                if (count($keyHashes) !== count(array_unique($keyHashes))) {
+                    throw ValidationException::withMessages([
+                        'license_keys' => 'Duplicate keys detected in your input. Each key must be unique.',
+                    ]);
+                }
+            }
         }
 
         unset($data['license_keys'], $data['no_license_key'], $data['license_mode']);
@@ -651,19 +763,23 @@ class LicenseController extends Controller
                 $licenseKeyRequired ? 'required' : 'nullable',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail) use ($license): void {
+                function (string $attribute, mixed $value, \Closure $fail) use ($license, $licenseMode): void {
                     if (blank($value)) {
                         return;
                     }
 
-                    $exists = License::query()
-                        ->where('license_key_hash', License::licenseKeyHash((string) $value))
-                        ->when($license, fn ($query) => $query->whereKeyNot($license->getKey()))
-                        ->exists();
+                    // For new_license mode, check if key already exists (must be unique)
+                    if ($licenseMode === 'new_license') {
+                        $exists = License::query()
+                            ->where('license_key_hash', License::licenseKeyHash((string) $value))
+                            ->when($license, fn ($query) => $query->whereKeyNot($license->getKey()))
+                            ->exists();
 
-                    if ($exists) {
-                        $fail('This license key has already been issued.');
+                        if ($exists) {
+                            $fail('This license key has already been issued.');
+                        }
                     }
+                    // For share_license mode, we allow duplicate keys (intentional sharing)
                 },
             ],
             'license_keys' => ['nullable', 'array'],
@@ -672,6 +788,8 @@ class LicenseController extends Controller
             'source_user_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('users', 'id')],
             'share_product_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('products', 'id')],
             'assign_user_id' => ['required_if:license_mode,share_license', 'integer', Rule::exists('users', 'id')],
+            'share_license_ids' => ['nullable', 'array'],
+            'share_license_ids.*' => ['integer', Rule::exists('licenses', 'id')],
         ];
 
         $validated = $request->validate($baseRules);
@@ -762,10 +880,23 @@ class LicenseController extends Controller
 
     private function uniqueGeneratedKey(): string
     {
+        $maxAttempts = 10;
+        $attempt = 0;
+        
         do {
+            $attempt++;
             $licenseKey = License::generateKey();
-        } while (License::query()->where('license_key_hash', License::licenseKeyHash($licenseKey))->exists());
-
-        return $licenseKey;
+            $exists = License::query()
+                ->where('license_key_hash', License::licenseKeyHash($licenseKey))
+                ->exists();
+            
+            if (!$exists) {
+                return $licenseKey;
+            }
+            
+            if ($attempt >= $maxAttempts) {
+                throw new \RuntimeException('Failed to generate unique license key after ' . $maxAttempts . ' attempts');
+            }
+        } while (true);
     }
 }
