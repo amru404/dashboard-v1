@@ -14,21 +14,47 @@
             </p>
         </div>
         <div class="shrink-0">
-            <a href="{{ route('admin.entitlements.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
+            <x-button :href="route('admin.entitlements.create')" variant="primary">
                 New Entitlement
-            </a>
+            </x-button>
         </div>
     </div>
 </div>
 
-{{-- Info Box --}}
-<div class="vd-card  border-[#2a3f5f] mb-6 flex items-start gap-3">
-    <svg class="mt-0.5 h-5 w-5 shrink-0 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <p class="text-sm text-gray-300 leading-relaxed">
-        Entitlements determine whether a customer can see a product and access related downloads. They cascade to sub-products. Licenses are separate installer-facing records.
-    </p>
+
+{{-- Search & Filters --}}
+<div class="vd-card border-[#2a3f5f] mb-6">
+    <form method="GET" action="{{ route('admin.entitlements.index') }}" class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ request('search') }}" 
+                placeholder="Search by customer, organization, or product..." 
+                class="w-full rounded-xl border border-[#2a3f5f] bg-[#0f1829] px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition focus:border-vd-primary focus:ring-2 focus:ring-vd-primary/20"
+            />
+        </div>
+        <div class="w-full md:w-48">
+            <select 
+                name="status" 
+                class="w-full rounded-xl border border-[#2a3f5f] bg-[#0f1829] px-4 py-2.5 text-sm text-white outline-none transition focus:border-vd-primary focus:ring-2 focus:ring-vd-primary/20"
+            >
+                <option value="">All Status</option>
+                <option value="active" @selected(request('status') === 'active')>Active</option>
+                <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <x-button type="submit" variant="primary">
+                Search
+            </x-button>
+            @if(request('search') || request('status'))
+                <x-button :href="route('admin.entitlements.index')" variant="secondary">
+                    Clear
+                </x-button>
+            @endif
+        </div>
+    </form>
 </div>
 
 <div class="vd-card  border-[#2a3f5f] overflow-hidden !p-0">

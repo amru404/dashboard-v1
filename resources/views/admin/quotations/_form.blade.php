@@ -59,7 +59,7 @@
             {{-- Download Expired Date --}}
             <div>
                 <x-input-label for="download_expired_at" value="Download Expires" />
-                <x-form-input id="download_expired_at" name="download_expired_at" type="date" value="{{ $quotation?->download_expired_at?->format('Y-m-d') ?? old('download_expired_at') }}" class="mt-2" />
+                <x-form-input id="download_expired_at" name="download_expired_at" type="date" value="{{ $quotation?->download_expired_at?->format('Y-m-d') ?? old('download_expired_at') }}" class="mt-2 color-scheme-dark" />
                 <x-input-error :messages="$errors->get('download_expired_at')" class="mt-2" />
             </div>
         </div>

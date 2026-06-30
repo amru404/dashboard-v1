@@ -41,10 +41,9 @@
                 </button>
             </div>
             
-            <a href="{{ route('admin.download-items.create') }}" 
-               class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                Register Download
-            </a>
+            <x-button :href="route('admin.download-items.create')" variant="primary">
+                New Download
+            </x-button>
         </div>
     </div>
 

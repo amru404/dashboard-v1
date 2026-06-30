@@ -14,9 +14,9 @@
             </p>
         </div>
         <div class="shrink-0">
-            <a href="{{ route('admin.invoices.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
+            <x-button :href="route('admin.invoices.create')" variant="primary">
                 Create Invoice
-            </a>
+            </x-button>
         </div>
     </div>
 </div>
@@ -41,14 +41,31 @@
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-4 py-3 text-white font-medium">{{ $invoice->display_name }}</td>
                         <td class="px-4 py-3">
+                            {{-- user --}}
                             <div class="flex items-center justify-center gap-2">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-vd-primary/10 text-vd-primary border border-vd-primary/20">
+                              <span class="group relative inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-vd-primary/10 text-vd-primary border border-vd-primary/20 cursor-pointer">
                                     {{ $invoice->users->count() }}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-</svg>
+                                    
+                                    <svg xmlns="http://w3.org" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                                    </svg>
+                                    
+                                    <div class="pointer-events-none invisible fixed z-[9999] -mt-32 -ml-20 w-48 rounded-lg bg-white p-2 text-left text-gray-800 shadow-2xl border border-gray-100 transition-all duration-200 opacity-0 scale-95 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-hover:scale-100">
+                                        <p class="font-bold text-[10px] uppercase tracking-wider text-gray-400 mb-1 px-2">List User</p>
+                                       <ul class="max-h-32 overflow-y-auto space-y-1">
+                                        @foreach($invoice->users->take(5) as $user)
+                                            <li class="px-2 py-1 rounded hover:bg-gray-50 text-xs font-normal text-gray-700">
+                                                {{ $user->name }}
+                                            </li>
+                                        @endforeach
+                                        @if($invoice->users->count() > 5)
+                                            <li class="px-2 py-1 text-center text-[11px] font-medium text-vd-primary bg-vd-primary/5 rounded border border-dashed border-vd-primary/20 mt-1">
+                                                +{{ $invoice->users->count() - 5 }} user lainnya...
+                                            </li>
+                                        @endif
+                                    </ul>
+                                    </div>
                                 </span>
-
                             </div>
                         </td>
                         <td class="px-4 py-3">

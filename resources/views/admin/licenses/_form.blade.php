@@ -30,7 +30,7 @@
 <div class="grid gap-5 lg:grid-cols-2">
     <div>
         <x-form-label for="user_id" value="Customer user" />
-        <select id="user_id" name="user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="user_id" name="user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'new_license'">
             <option value="">Select customer</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('user_id', $license->user_id) === (string) $user->id)>
@@ -43,7 +43,7 @@
 
     <div>
         <x-form-label for="product_id" value="Product" />
-        <select id="product_id" name="product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="product_id" name="product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'new_license'">
             <option value="">Select product</option>
             @foreach ($productOptions as $option)
                 <option value="{{ $option['id'] }}" @selected((string) old('product_id', $license->product_id) === (string) $option['id'])>
@@ -57,7 +57,7 @@
 </div>
   <div class="col-span-2">
         <x-form-label for="license_type_id" value="License type" />
-        <select id="license_type_id" name="license_type_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="license_type_id" name="license_type_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'new_license'">
             <option value="">Select type</option>
             @foreach ($licenseTypes as $licenseType)
                 <option value="{{ $licenseType->id }}" @selected((string) old('license_type_id', $license->license_type_id) === (string) $licenseType->id)>
@@ -82,9 +82,10 @@
 <div x-show="!noLicenseKey" class="grid gap-5 lg:grid-cols-2">
     <div>
         <x-form-label for="expired_date" value="Expiry date" />
-        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $license->expired_date?->format('Y-m-d')) }}" class="mt-2" />
-        <x-input-error :messages="$errors->get('expired_date')" class="mt-2" />
+        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $license->expired_date?->format('Y-m-d')) }}" class="mt-2 color-scheme-dark"/>
+        <x-input-error :messages="$errors->get('expired_date')" class="mt-2 color-scheme-dark" />
     </div>
+    
 
     <div>
         <x-form-label for="quantity" value="Quantity" />
@@ -159,7 +160,7 @@
 <div class="grid gap-5 lg:grid-cols-2">
     <div>
         <x-form-label for="source_user_id" value="Source Client" />
-        <select id="source_user_id" name="source_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="source_user_id" name="source_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'share_license'">
             <option value="">Select source client</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('source_user_id') === (string) $user->id)>
@@ -173,7 +174,7 @@
 
     <div>
         <x-form-label for="share_product_id" value="Product" />
-        <select id="share_product_id" name="share_product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="share_product_id" name="share_product_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'share_license'">
             <option value="">First select a source client</option>
         </select>
         <p class="mt-2 text-xs text-madani-muted">Products with licenses from the selected client.</p>
@@ -182,7 +183,7 @@
 
     <div>
         <x-form-label for="assign_user_id" value="Assign to User" />
-        <select id="assign_user_id" name="assign_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15">
+        <select id="assign_user_id" name="assign_user_id" class="madani-input mt-2 lock w-full rounded-xl border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" :disabled="licenseMode !== 'share_license'">
             <option value="">Select user to assign</option>
             @foreach ($users as $user)
                 <option value="{{ $user->id }}" @selected((string) old('assign_user_id', $license->user_id) === (string) $user->id)>
@@ -435,14 +436,13 @@
             const noLicenseKeyCheckbox = document.getElementById('no_license_key');
             const licenseMode = document.querySelector('input[name="license_mode"]:checked')?.value;
             
-            // For share_license mode, let form submit normally
+            // For share_license mode, let form submit normally (traditional form submission)
             if (licenseMode === 'share_license') {
-                return;
+                return; // Allow normal form submission
             }
             
             if (noLicenseKeyCheckbox && noLicenseKeyCheckbox.checked) {
-                // For no_license_key scenario, we still need to submit via batch API
-                // but with no license_keys
+                // For no_license_key scenario, submit with no_license_key flag
                 e.preventDefault();
 
                 const batchUrl = form.dataset.batchUrl;
@@ -454,18 +454,19 @@
                 }
 
                 const quantityInput = document.getElementById('quantity');
-                const quantity = Number(quantityInput?.value || 1) || 1;
+                const quantity = parseInt(quantityInput?.value || 1) || 1;
 
                 const payload = {
+                    license_mode: 'new_license',
                     user_id: document.getElementById('user_id')?.value,
                     license_type_id: document.getElementById('license_type_id')?.value,
                     product_id: document.getElementById('product_id')?.value,
                     sub_product_id: document.getElementById('sub_product_id')?.value || null,
-                    quantity: document.getElementById('quantity')?.value,
+                    quantity: quantity,
                     max_activations: document.getElementById('max_activations')?.value || null,
                     expired_date: document.getElementById('expired_date')?.value || null,
-                    license_count: Number(quantity),
-                    no_license_key: true,
+                    no_license_key: 1,
+                    license_keys: [], // Empty array for no_license_key
                 };
 
                 try {
@@ -482,7 +483,10 @@
                     const json = await resp.json();
 
                     if (!resp.ok) {
-                        throw new Error(json.message || 'Batch create failed');
+                        const errorMsg = json.message || 'Batch create failed';
+                        const errors = json.errors ? '\n\n' + Object.values(json.errors).flat().join('\n') : '';
+                        alert(errorMsg + errors);
+                        return;
                     }
 
                     if (json.redirect) {
@@ -498,7 +502,7 @@
             }
             
             const quantityInput = document.getElementById('quantity');
-            const quantity = Number(quantityInput?.value || 1) || 1;
+            const quantity = parseInt(quantityInput?.value || 1) || 1;
             const licenseKeyInputs = document.querySelectorAll('input[name="license_keys[]"]');
 
             if (!licenseKeyInputs.length) return;
@@ -514,14 +518,14 @@
             }
 
             const payload = {
+                license_mode: 'new_license',
                 user_id: document.getElementById('user_id')?.value,
                 license_type_id: document.getElementById('license_type_id')?.value,
                 product_id: document.getElementById('product_id')?.value,
                 sub_product_id: document.getElementById('sub_product_id')?.value || null,
-                quantity: document.getElementById('quantity')?.value,
+                quantity: quantity,
                 max_activations: document.getElementById('max_activations')?.value || null,
                 expired_date: document.getElementById('expired_date')?.value || null,
-                license_count: Number(quantity),
             };
 
             const provided = Array.from(licenseKeyInputs).map(i => i.value).filter(Boolean);
@@ -541,7 +545,10 @@
                 const json = await resp.json();
 
                 if (!resp.ok) {
-                    throw new Error(json.message || 'Batch create failed');
+                    const errorMsg = json.message || 'Batch create failed';
+                    const errors = json.errors ? '\n\n' + Object.values(json.errors).flat().join('\n') : '';
+                    alert(errorMsg + errors);
+                    return;
                 }
 
                 if (json.redirect) {

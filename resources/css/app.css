@@ -179,4 +179,14 @@
     .vd-hero-glow {
         background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(122,43,255,0.18) 0%, transparent 70%);
     }
+
+    /* Color Scheme */
+    .color-scheme-dark {
+        color-scheme: dark;
+    }
+
+    /* File Input */
+    .vd-file-input {
+        @apply file:bg-vd-primary file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:mr-4 file:cursor-pointer;
+    }
 }

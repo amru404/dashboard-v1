@@ -14,9 +14,9 @@
             </p>
         </div>
         <div class="shrink-0">
-            <a href="{{ route('admin.organizations.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
+            <x-button :href="route('admin.organizations.create')" variant="primary">
                 New Organization
-            </a>
+            </x-button>
         </div>
     </div>
 </div>

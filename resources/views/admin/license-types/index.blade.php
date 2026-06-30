@@ -14,9 +14,9 @@
             </p>
         </div>
         <div class="shrink-0">
-            <a href="{{ route('admin.license-types.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                Create Type
-            </a>
+            <x-button :href="route('admin.license-types.create')" variant="primary">
+                New Type
+            </x-button>
         </div>
     </div>
 </div>

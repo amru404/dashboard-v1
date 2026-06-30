@@ -43,6 +43,22 @@ class ProductTreeBuilder
                 ->values();
         }
 
+        if ($rootOnly) {
+            return $products
+                ->filter(fn (Product $product): bool => ! $excludedIds->contains($product->id))
+                ->when($activeOnly, fn (EloquentCollection $products): EloquentCollection => $products->filter(fn (Product $product): bool => $product->is_active))
+                ->map(fn (Product $product): array => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                    'label' => $product->name,
+                    'path' => $product->name,
+                    'depth' => 0,
+                    'is_active' => $product->is_active,
+                ])
+                ->values();
+        }
+
         return $this->flattenProducts($products, $excludedIds, $activeOnly);
     }
 

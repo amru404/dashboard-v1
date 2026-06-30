@@ -14,9 +14,9 @@
             </p>
         </div>
         <div class="shrink-0">
-            <a href="{{ route('admin.quotations.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-primary hover:bg-vd-primary/90 text-white font-semibold text-sm transition-colors">
-                Create Quotation
-            </a>
+            <x-button :href="route('admin.quotations.create')" variant="primary">
+                New Quotation
+            </x-button>
         </div>
     </div>
 </div>
@@ -28,7 +28,7 @@
             <thead>
                 <tr class="border-b border-[#2a3f5f]">
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Display Name</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Assigned Users</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Assigned Users</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">File</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Download Expires</th>
@@ -41,24 +41,30 @@
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-4 py-3 text-white font-medium">{{ $quotation->display_name }}</td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-vd-primary/10 text-vd-primary border border-vd-primary/20">
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="group relative inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-vd-primary/10 text-vd-primary border border-vd-primary/20 cursor-pointer">
                                     {{ $quotation->users->count() }}
-                                </span>
-                                @if ($quotation->users->isNotEmpty())
-                                    <div class="flex -space-x-2">
-                                        @foreach ($quotation->users->take(3) as $user)
-                                            <div class="w-6 h-6 rounded-full bg-vd-primary/20 border border-vd-primary/30 flex items-center justify-center text-xs font-semibold text-vd-primary" title="{{ $user->name }}">
-                                                {{ substr($user->name, 0, 1) }}
-                                            </div>
+                                    
+                                    <svg xmlns="http://w3.org" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                                    </svg>
+                                    
+                                    <div class="pointer-events-none invisible fixed z-[9999] -mt-32 -ml-20 w-48 rounded-lg bg-white p-2 text-left text-gray-800 shadow-2xl border border-gray-100 transition-all duration-200 opacity-0 scale-95 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-hover:scale-100">
+                                        <p class="font-bold text-[10px] uppercase tracking-wider text-gray-400 mb-1 px-2">List User</p>
+                                       <ul class="max-h-32 overflow-y-auto space-y-1">
+                                        @foreach($quotation->users->take(4) as $user)
+                                            <li class="px-2 py-1 rounded hover:bg-gray-50 text-xs font-normal text-gray-700">
+                                                {{ $user->name }}
+                                            </li>
                                         @endforeach
-                                        @if ($quotation->users->count() > 3)
-                                            <div class="w-6 h-6 rounded-full bg-gray-500/20 border border-gray-500/30 flex items-center justify-center text-xs font-semibold text-gray-400">
-                                                +{{ $quotation->users->count() - 3 }}
-                                            </div>
+                                        @if($quotation->users->count() > 4)
+                                            <li class="px-2 py-1 text-center text-[11px] font-medium text-vd-primary bg-vd-primary/5 rounded border border-dashed border-vd-primary/20 mt-1">
+                                                +{{ $quotation->users->count() - 4 }} user lainnya...
+                                            </li>
                                         @endif
+                                    </ul>
                                     </div>
-                                @endif
+                                </span>
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -91,11 +97,9 @@
                             {{ $quotation->download_expired_at?->format('M j, Y') ?? 'No limit' }}
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @if ($quotation->is_active)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">Yes</span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">No</span>
-                            @endif
+                           <x-badge :active="$quotation->is_active">
+                            {{ $quotation->is_active ? 'Active' : 'Inactive' }}
+                        </x-badge>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center gap-2">

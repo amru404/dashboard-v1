@@ -20,13 +20,35 @@ class EntitlementController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = Entitlement::query()
+            ->with(['user.organization', 'product']);
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user.organization', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('product', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Status filter
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
         return view('admin.entitlements.index', [
-            'entitlements' => Entitlement::query()
-                ->with(['user.organization', 'product'])
-                ->latest()
-                ->paginate(20),
+            'entitlements' => $query->latest()->paginate(20)->withQueryString(),
         ]);
     }
 

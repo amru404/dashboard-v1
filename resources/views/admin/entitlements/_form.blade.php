@@ -26,9 +26,9 @@
         <div class="relative mt-2">
             <select id="product_id" name="product_id" class="block w-full rounded-xl border vd-input px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15" required>
                 <option value="">Select product</option>
-                @foreach ($productOptions as $option)
+                 @foreach ($productOptions as $option)
                     <option value="{{ $option['id'] }}" @selected((string) old('product_id', $entitlement->product_id) === (string) $option['id'])>
-                        {{ $option['label'] }} - {{ $option['path'] }}
+                        {{ $option['label'] }} - {{ $option['code'] }}
                     </option>
                 @endforeach
             </select>
@@ -44,20 +44,20 @@
 
     <div>
         <x-form-label for="start_date" value="Access start" />
-        <x-form-input id="start_date" name="start_date" type="date" value="{{ old('start_date', $entitlement->start_date?->format('Y-m-d') ?? now()->toDateString()) }}" required class="mt-2" />
+        <x-form-input id="start_date" name="start_date" type="date" value="{{ old('start_date', $entitlement->start_date?->format('Y-m-d') ?? now()->toDateString()) }}" required class="mt-2 color-scheme-dark" />
         <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
     </div>
 
     <div>
         <x-form-label for="end_date" value="Access end" />
-        <x-form-input id="end_date" name="end_date" type="date" value="{{ old('end_date', $entitlement->end_date?->format('Y-m-d')) }}" class="mt-2" />
+        <x-form-input id="end_date" name="end_date" type="date" value="{{ old('end_date', $entitlement->end_date?->format('Y-m-d')) }}" class="mt-2 color-scheme-dark" />
         <p class="mt-2 text-xs text-madani-muted">Leave blank for open-ended product access.</p>
         <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
     </div>
 
     <div>
         <x-form-label for="download_expired_date" value="Download access end" />
-        <x-form-input id="download_expired_date" name="download_expired_date" type="date" value="{{ old('download_expired_date', $entitlement->download_expired_date?->format('Y-m-d')) }}" class="mt-2" />
+        <x-form-input id="download_expired_date" name="download_expired_date" type="date" value="{{ old('download_expired_date', $entitlement->download_expired_date?->format('Y-m-d')) }}" class="mt-2 color-scheme-dark" />
         <p class="mt-2 text-xs text-madani-muted">Leave blank to allow downloads while the entitlement is current.</p>
         <x-input-error :messages="$errors->get('download_expired_date')" class="mt-2" />
     </div>

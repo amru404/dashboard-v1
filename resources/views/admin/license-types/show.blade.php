@@ -5,8 +5,13 @@
 @section('content')
     <x-page-header title="{{ $licenseType->name }}" subtitle="License type configuration and usage.">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.license-types.edit', $licenseType)">Edit type</x-button>
-            <x-button variant="secondary" :href="route('admin.license-types.index')">Back to types</x-button>
+             <a href="{{ route('admin.license-types.index') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-secondary hover:bg-vd-secondary/90 text-white font-semibold text-sm transition-colors">
+                Back to types
+            </a>
+             <x-button :href="route('admin.license-types.edit', $licenseType)" variant="primary">
+                Edit Type
+            </x-button>
+            
         </x-slot>
     </x-page-header>
 
@@ -53,7 +58,7 @@
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-madani-border">
-                <thead class="bg-white">
+                <thead class="bg-vd-secondary">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Customer</th>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Product</th>
@@ -61,7 +66,7 @@
                         <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-madani-border bg-white">
+                <tbody class="divide-y divide-madani-border bg-vd-secondary">
                     @forelse ($licenseType->licenses as $license)
                         <tr>
                             <td class="px-6 py-4">

@@ -7,8 +7,12 @@
 
     <x-page-header title="{{ $product->name }}" subtitle="Product details and recursive child products.">
         <x-slot name="actions">
-            <x-button variant="ghost" :href="route('admin.products.index')">Product tree</x-button>
-            <x-button variant="secondary" :href="route('admin.products.edit', $product)">Edit product</x-button>
+        <a href="{{ route('admin.products.index') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-secondary hover:bg-vd-secondary/90 text-white font-semibold text-sm transition-colors">
+            Product Tree
+        </a>
+            <x-button :href="route('admin.products.edit', $product)" variant="primary">
+                Edit Product
+            </x-button>
         </x-slot>
     </x-page-header>
 
@@ -86,7 +90,9 @@
                 <h2 class="text-lg font-bold text-madani-deep">Child products</h2>
                 <p class="mt-1 text-sm text-madani-muted">Recursive descendants under this product.</p>
             </div>
-            <x-button :href="route('admin.products.create', ['parent_id' => $product->id])">Create child product</x-button>
+            <x-button :href="route('admin.products.create', ['parent_id' => $product->id])" variant="primary">
+                Create child product
+            </x-button>
         </div>
 
         <div class="mt-6">

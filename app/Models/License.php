@@ -67,7 +67,30 @@ class License extends Model
             return 'Unavailable';
         }
 
-        return '****-****-****-'.substr($key, -4);
+        // Remove dashes to get pure key
+        $cleanKey = str_replace('-', '', $key);
+        $keyLength = strlen($cleanKey);
+        
+        // Show last 4 characters only
+        $visibleChars = 4;
+        
+        if ($keyLength <= $visibleChars) {
+            return $key; // If key is too short, just show it
+        }
+        
+        // Calculate how many masked characters needed
+        $maskedLength = $keyLength - $visibleChars;
+        
+        // Create masked part with groups of 4
+        $maskedPart = str_repeat('*', $maskedLength);
+        
+        // Format masked part in groups of 4 with dashes
+        $formattedMask = implode('-', str_split($maskedPart, 4));
+        
+        // Get visible part (last 4 chars)
+        $visiblePart = substr($cleanKey, -$visibleChars);
+        
+        return $formattedMask . '-' . $visiblePart;
     }
 
     /**

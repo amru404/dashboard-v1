@@ -11,7 +11,6 @@
 
     <x-page-header title="License details" subtitle="{{ $license->user->name }} - {{ $license->product->name }}">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.licenses.add-keys', $license)">Add sub-product keys</x-button>
             <x-button variant="secondary" :href="route('admin.licenses.index')">Back to licenses</x-button>
         </x-slot>
     </x-page-header>
@@ -84,7 +83,7 @@
                     @csrf
                     <div>
                         <x-form-label for="strategy" value="Reset strategy" />
-                        <select id="strategy" name="strategy" class="madani-input mt-2">
+                        <select id="strategy" name="strategy" class="vd-input mt-2">
                             <option value="delete">Remove activation records</option>
                             <option value="deactivate">Mark activations inactive</option>
                         </select>
@@ -128,7 +127,7 @@
         @else
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-madani-border">
-                    <thead class="bg-white">
+                    <thead class="bg-vd-secondary">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Sub-Product</th>
                             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">License Key</th>
@@ -137,7 +136,7 @@
                             <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-madani-border bg-white">
+                    <tbody class="divide-y divide-madani-border bg-vd-surface">
                         @foreach ($subProductLicenses as $subLicense)
                             <tr>
                                 <td class="px-6 py-4 text-sm text-madani-deep">{{ $subLicense->subProduct?->name ?? 'Unknown' }}</td>
@@ -173,7 +172,7 @@
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-madani-border">
-                <thead class="bg-white">
+                <thead class="bg-vd-secondary">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Device</th>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Hostname</th>
@@ -184,7 +183,7 @@
                         <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-madani-border bg-white">
+                <tbody class="divide-y divide-madani-border bg-vd-surface">
                     @forelse ($license->activations as $activation)
                         <tr>
                             <td class="px-6 py-4 font-mono text-sm text-madani-deep">{{ $activation->device_id }}</td>

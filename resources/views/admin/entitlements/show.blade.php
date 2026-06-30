@@ -5,8 +5,12 @@
 @section('content')
     <x-page-header title="Entitlement details" subtitle="{{ $entitlement->user->name }} - {{ $entitlement->product->name }}">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.entitlements.edit', $entitlement)">Edit entitlement</x-button>
-            <x-button variant="secondary" :href="route('admin.entitlements.index')">Back to entitlements</x-button>
+            <a href="{{ route('admin.entitlements.index') }}" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-vd-secondary hover:bg-vd-secondary/90 text-white font-semibold text-sm transition-colors">
+                Back to entitlements
+            </a>
+            <x-button :href="route('admin.entitlements.edit', $entitlement)" variant="primary">
+                Edit entitlement
+            </x-button>
         </x-slot>
     </x-page-header>
 

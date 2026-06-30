@@ -351,11 +351,18 @@ class ProductController extends Controller
             ->map(function ($sp) {
                 $depth = $sp->getAttribute('tree_depth') ?? 0;
                 
-                // Generate depth label
+                // Generate depth label (long version)
                 $depthLabel = match ($depth) {
                     0 => 'Sub-product',
                     1 => 'Sub-sub-product',
                     default => 'Sub-' . str_repeat('sub-', $depth) . 'product',
+                };
+                
+                // Generate short badge label (sub, sub sub, or depth number)
+                $shortLabel = match ($depth) {
+                    0 => 'Sub',
+                    1 => 'Sub Sub',
+                    default => str_repeat('Sub ', $depth + 1),
                 };
                 
                 // Generate breadcrumb (parent hierarchy)
@@ -363,12 +370,10 @@ class ProductController extends Controller
                 $breadcrumb = '';
                 
                 if ($breadcrumbs->count() > 1) {
-                    // Get parent names (exclude self and root)
-                    $parents = $breadcrumbs->slice(1, -1);
+                    // Get parent names (exclude self)
+                    $parents = $breadcrumbs->slice(0, -1);
                     if ($parents->isNotEmpty()) {
-                        $breadcrumb = $parents->map(fn($p) => $p->name)->implode(' → ') . ' ' . $depthLabel . ' of ' . $breadcrumbs->first()->name;
-                    } else {
-                        $breadcrumb = $depthLabel . ' of ' . $breadcrumbs->first()->name;
+                        $breadcrumb = $parents->map(fn($p) => $p->name)->implode(' → ');
                     }
                 }
                 
@@ -378,6 +383,7 @@ class ProductController extends Controller
                     'code' => $sp->code,
                     'depth' => $depth,
                     'depthLabel' => $depthLabel,
+                    'shortLabel' => $shortLabel,
                     'breadcrumb' => $breadcrumb,
                 ];
             });

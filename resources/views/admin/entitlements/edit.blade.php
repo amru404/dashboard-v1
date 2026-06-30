@@ -5,7 +5,9 @@
 @section('content')
     <x-page-header title="Edit entitlement" subtitle="{{ $entitlement->user?->name }} - {{ $entitlement->product?->name }}">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.entitlements.show', $entitlement)">Back to entitlement</x-button>
+            <x-button :href="route('admin.entitlements.show', $entitlement)" variant="secondary">
+                Back to entitlement
+            </x-button>
         </x-slot>
     </x-page-header>
 

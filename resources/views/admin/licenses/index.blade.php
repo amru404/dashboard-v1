@@ -6,7 +6,9 @@
 
     <x-page-header title="Licenses" subtitle="Installer-facing license records assigned to customer users.">
         <x-slot name="actions">
-            <x-button variant="primary" :href="route('admin.licenses.create')">New Licenses</x-button>
+            <x-button :href="route('admin.licenses.create')" variant="primary">
+                New Licenses
+            </x-button>
         </x-slot>
     </x-page-header>
 

@@ -22,7 +22,7 @@
                 id="user_id" 
                 name="user_id" 
                 x-model="selectedUserId"
-                class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2"
+                class="block w-full rounded-xl border vd-input bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2"
             >
                 <option value="">All entitled users</option>
                 @foreach ($users as $user)
@@ -46,7 +46,7 @@
                 id="product_id" 
                 name="product_id" 
                 x-model="selectedProductId"
-                class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2"
+                class="block w-full rounded-xl border vd-input bg-vd-surface px-4 py-3 pr-10 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2"
                 required
             >
                 <option value="">Select product</option>
@@ -81,9 +81,9 @@
         <x-input-error :messages="$errors->get('version')" class="mt-2" />
     </div>
 
-    <div class="rounded-xl border border-madani-border bg-madani-ghost p-4 lg:col-span-2">
+    <div class="rounded-xl vd-input bg-madani-ghost p-4 lg:col-span-2">
         <x-form-label for="file_upload" value="Upload private file" />
-        <input id="file_upload" name="file_upload" type="file" class="block w-full rounded-xl border border-vd-border bg-vd-surface px-4 py-3 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2">
+        <input id="file_upload" name="file_upload" type="file" class="block w-full vd-file-input vd-input rounded-xl border bg-vd-surface px-4 py-3 text-sm text-madani-deep outline-none transition focus:border-madani-green focus:ring-2 focus:ring-madani-green/15 mt-2">
         <p class="mt-2 text-xs text-madani-muted">Uploaded files are stored under storage/app/private/downloads.</p>
         <x-input-error :messages="$errors->get('file_upload')" class="mt-2" />
     </div>
@@ -103,7 +103,7 @@
 
     <div>
         <x-form-label for="expired_date" value="Download item expiry" />
-        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $downloadItem->expired_date?->format('Y-m-d')) }}" class="mt-2" />
+        <x-form-input id="expired_date" name="expired_date" type="date" value="{{ old('expired_date', $downloadItem->expired_date?->format('Y-m-d')) }}" class="mt-2 color-scheme-dark" />
         <x-input-error :messages="$errors->get('expired_date')" class="mt-2" />
     </div>
 

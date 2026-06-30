@@ -3,9 +3,8 @@
 @section('title', 'Generate Bulk Licenses')
 
 @section('content')
-    <x-page-header title="New license" subtitle="Create an encrypted installer-facing license for a customer user.">
+    <x-page-header title="New Multiple License" subtitle="Create and configure a new multiple license .">
         <x-slot name="actions">
-            <x-button variant="secondary" :href="route('admin.licenses.batch-create')">Batch issue</x-button>
         </x-slot>
     </x-page-header>
 

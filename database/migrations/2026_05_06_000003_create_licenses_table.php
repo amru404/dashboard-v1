@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('sub_product_id')->nullable()->index()->constrained('products')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('license_type_id')->constrained('license_types')->restrictOnDelete();
-            $table->text('license_key');
-            $table->char('license_key_hash', 64)->unique();
+            $table->text('license_key')->nullable();
+            $table->char('license_key_hash', 64)->unique()->nullable();
             $table->string('client_name')->nullable();
             $table->unsignedInteger('quantity')->default(1);
             $table->unsignedInteger('max_activations')->nullable();
