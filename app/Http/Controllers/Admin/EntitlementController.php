@@ -116,7 +116,7 @@ class EntitlementController extends Controller
             'user_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])),
             ],
             'product_id' => [
                 'required',
@@ -152,7 +152,7 @@ class EntitlementController extends Controller
         return [
             'users' => User::query()
                 ->with('organization')
-                ->where('role', User::ROLE_USER)
+                ->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])
                 ->orderBy('name')
                 ->get(),
             'productOptions' => $this->productTreeBuilder->options(rootOnly: true),

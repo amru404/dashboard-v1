@@ -238,6 +238,8 @@
         if (sourceUserSelect && shareProductSelect) {
             sourceUserSelect.addEventListener('change', async function() {
                 const userId = this.value;
+                console.log('Source user changed:', userId);
+                
                 shareProductSelect.innerHTML = '<option value="">Loading...</option>';
                 licenseSelectionContainer.classList.add('hidden');
                 licenseCheckboxes.innerHTML = '';
@@ -248,18 +250,26 @@
                 }
                 
                 try {
-                    const response = await fetch(`/admin/licenses/user/${userId}/products`, {
+                    const url = `/admin/licenses/user/${userId}/products`;
+                    console.log('Fetching products from:', url);
+                    
+                    const response = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'Accept': 'application/json'
                         }
                     });
                     
+                    console.log('Response status:', response.status);
+                    
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Response error:', errorText);
                         throw new Error('Failed to fetch products');
                     }
                     
                     const products = await response.json();
+                    console.log('Products received:', products);
                     
                     if (products.length === 0) {
                         shareProductSelect.innerHTML = '<option value="">No products with licenses found for this client</option>';
@@ -283,6 +293,8 @@
             shareProductSelect.addEventListener('change', async function() {
                 const productId = this.value;
                 const userId = sourceUserSelect.value;
+                console.log('Product changed:', productId, 'User:', userId);
+                
                 licenseCheckboxes.innerHTML = '';
                 
                 if (!productId || !userId) {
@@ -294,18 +306,26 @@
                 licenseSelectionContainer.classList.remove('hidden');
                 
                 try {
-                    const response = await fetch(`/admin/licenses/user/${userId}/product/${productId}/licenses`, {
+                    const url = `/admin/licenses/user/${userId}/product/${productId}/licenses`;
+                    console.log('Fetching licenses from:', url);
+                    
+                    const response = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'Accept': 'application/json'
                         }
                     });
                     
+                    console.log('License response status:', response.status);
+                    
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('License response error:', errorText);
                         throw new Error('Failed to fetch licenses');
                     }
                     
                     const licenses = await response.json();
+                    console.log('Licenses received:', licenses);
                     
                     if (licenses.length === 0) {
                         licenseCheckboxes.innerHTML = '<p class="text-sm text-gray-400">No licenses found</p>';

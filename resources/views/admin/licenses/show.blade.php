@@ -106,6 +106,66 @@
 
     <x-card class="mt-6 overflow-hidden p-0">
         <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
+            <h2 class="text-lg font-bold text-madani-deep">Shared With</h2>
+            <p class="mt-1 text-sm text-madani-muted">Users who have access to this license.</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-madani-border">
+                <thead class="bg-vd-secondary">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">User</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Email</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Organization</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Role</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Shared At</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.14em] text-madani-muted">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-madani-border bg-vd-surface">
+                    @forelse ($license->users as $sharedUser)
+                        <tr>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-madani-deep">{{ $sharedUser->name }}</span>
+                                    @if ($sharedUser->pivot->is_owner)
+                                        <span class="rounded-full bg-madani-pale px-2 py-0.5 text-xs font-semibold text-madani-green">Owner</span>
+                                    @else
+                                        <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">Shared</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-madani-muted">{{ $sharedUser->email }}</td>
+                            <td class="px-6 py-4 text-sm text-madani-muted">{{ $sharedUser->organization?->name ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-madani-muted">{{ ucfirst($sharedUser->role) }}</td>
+                            <td class="px-6 py-4 text-sm text-madani-muted">
+                                {{ $sharedUser->pivot->shared_at ? \Carbon\Carbon::parse($sharedUser->pivot->shared_at)->format('M j, Y H:i') : '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                @if (!$sharedUser->pivot->is_owner)
+                                    <form method="POST" action="{{ route('admin.licenses.revoke-access', [$license, $sharedUser]) }}" onsubmit="return confirm('Revoke access for {{ $sharedUser->name }}?')">
+                                        @csrf
+                                        <x-button variant="ghost" type="submit">Revoke Access</x-button>
+                                    </form>
+                                @else
+                                    <span class="text-xs text-madani-muted">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-sm text-madani-muted">
+                                This license is not shared with any users.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </x-card>
+
+    <x-card class="mt-6 overflow-hidden p-0">
+        <div class="border-b border-madani-border bg-madani-ghost px-6 py-5">
             <h2 class="text-lg font-bold text-madani-deep">Activation records</h2>
             <p class="mt-1 text-sm text-madani-muted">Week 3 public activation will populate these records through the installer API.</p>
         </div>

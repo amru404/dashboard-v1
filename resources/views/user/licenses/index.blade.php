@@ -92,6 +92,7 @@
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Type</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Expiry</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Activation</th>
                                         <th class="px-4 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -168,6 +169,13 @@
                                                         {{ $license->expired_date ? 'Active' : 'No expiry' }}
                                                     </span>
                                                 @endif
+                                            </td>
+
+                                            {{-- activation --}}
+                                            <td class="px-4 py-3 text-sm">
+                                                <span class="inline-flex items-center rounded-full border border-vd-border bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400">
+                                                    {{ $license->active_activations_count }} / {{ $license->max_activations ?: '∞' }}
+                                                </span>
                                             </td>
 
                                             <!-- Actions -->

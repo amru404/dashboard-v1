@@ -115,7 +115,7 @@
                                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">License Key</th>
                                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Type</th>
                                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Expiry</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
+                                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
                                              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Activations</th>
                                             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -188,20 +188,34 @@
 
                                                 <!-- Status -->
                                                 <td class="px-4 py-3 text-sm">
-                                                    @if ($license->isExpired())
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-                                                            Expired
-                                                        </span>
-                                                    @elseif ($days !== null && $days <= 30)
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                                                            {{ $days }}d left
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-                                                            {{ $license->expired_date ? 'Active' : 'No expiry' }}
+                                                    <div class="flex flex-wrap items-center gap-1.5">
+                                                        @if ($license->isExpired())
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                                                                Expired
+                                                            </span>
+                                                        @elseif ($days !== null && $days <= 30)
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                                                {{ $days }}d left
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                                                                Active
+                                                            </span>
+                                                        @endif
+                                                        @if ($license->shared_users_count > 0)
+                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30" title="Shared with {{ $license->shared_users_count }} user(s)">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                                </svg>
+                                                                {{ $license->shared_users_count }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                            {{-- {{ $license->expired_date ? 'Active' : 'No expiry' }}
                                                         </span>
                                                     @endif
-                                                </td>
+                                                </td> --}}
 
                                                 {{-- Activation --}}
                                                  <td class="px-4 py-3 text-sm">

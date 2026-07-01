@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::get('licenses/{license}/show-key', [LicenseController::class, 'showKey'])->name('licenses.show-key');
         Route::post('licenses/{license}/reveal-key', [LicenseController::class, 'revealKey'])->name('licenses.reveal-key');
         Route::post('licenses/{license}/reset-activation', [LicenseController::class, 'resetActivation'])->name('licenses.reset-activation');
+        Route::post('licenses/{license}/revoke-access/{user}', [LicenseController::class, 'revokeAccess'])->name('licenses.revoke-access');
         Route::delete('licenses/activation/{activation}', [LicenseController::class, 'destroyActivation'])->name('licenses.activation.destroy');
         Route::resource('licenses', LicenseController::class);
         Route::resource('license-activations', LicenseActivationController::class)->only(['index', 'destroy']);

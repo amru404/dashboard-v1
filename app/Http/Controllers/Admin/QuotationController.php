@@ -42,7 +42,7 @@ class QuotationController extends Controller
             'user_ids' => ['required', 'array'],
             'user_ids.*' => ['exists:users,id'],
             'file' => [
-                'nullable', 'file', 'max:512000',
+                'nullable', 'file', 'max:51200',
                 'mimes:pdf,doc,docx,xls,xlsx,zip',
             ],
             'status' => ['required', 'in:draft,sent,paid,cancelled'],

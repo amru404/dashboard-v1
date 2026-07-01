@@ -39,6 +39,33 @@
             <input type="hidden" name="sub_product_id" value="{{ $license->sub_product_id }}" />
         @endif
     </div>
+
+    <div>
+        <x-form-label for="max_activations" value="Max Activations (optional)" />
+        <x-form-input 
+            id="max_activations" 
+            name="max_activations" 
+            type="number"
+            min="1"
+            placeholder="Leave blank for unlimited"
+            class="mt-2"
+            value="{{ old('max_activations', $license->max_activations) }}"
+        />
+        <x-input-error :messages="$errors->get('max_activations')" class="mt-2" />
+    </div>
+
+    <div>
+        <x-form-label for="expired_date" value="Expiry Date (optional)" />
+        <x-form-input 
+            id="expired_date" 
+            name="expired_date" 
+            type="date"
+            placeholder="Leave blank for no expiry"
+            class="mt-2"
+            value="{{ old('expired_date', $license->expired_date?->format('Y-m-d')) }}"
+        />
+        <x-input-error :messages="$errors->get('expired_date')" class="mt-2" />
+    </div>
 </div>
 
 <div class="mt-5 rounded-xl border border-vd-border p-4">

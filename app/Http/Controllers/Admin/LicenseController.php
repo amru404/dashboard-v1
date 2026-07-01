@@ -29,7 +29,10 @@ class LicenseController extends Controller
     {
         $licenses = License::query()
             ->with(['product', 'subProduct', 'user.organization', 'licenseType'])
-            ->withCount('activeActivations')
+            ->withCount([
+                'activeActivations',
+                'sharedWith as shared_users_count'
+            ])
             ->latest()
             ->get();
 
@@ -82,7 +85,7 @@ class LicenseController extends Controller
             'products' => $products,
             'users' => User::query()
                 ->with('organization')
-                ->where('role', User::ROLE_USER)
+                ->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])
                 ->orderBy('name')
                 ->get(),
             'licenseTypes' => LicenseType::query()
@@ -98,7 +101,7 @@ class LicenseController extends Controller
             'user_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])),
             ],
             'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
             'license_type_id' => ['required', 'integer', Rule::exists('license_types', 'id')],
@@ -205,9 +208,8 @@ class LicenseController extends Controller
     public function getUserProducts(User $user): JsonResponse
     {
         try {
-            // Get all unique parent products that this user has licenses for
-            $licenses = License::query()
-                ->where('user_id', $user->id)
+            // Get all unique parent products that this user has licenses for via pivot relationship
+            $licenses = $user->accessibleLicenses()
                 ->whereNotNull('license_key')
                 ->with('product')
                 ->get();
@@ -251,9 +253,8 @@ class LicenseController extends Controller
 
     public function getUserProductLicenses(User $user, Product $product): JsonResponse
     {
-        // Get all licenses for this user and product (including sub-products)
-        $licenses = License::query()
-            ->where('user_id', $user->id)
+        // Get all licenses for this user and product (including sub-products) via pivot relationship
+        $licenses = $user->accessibleLicenses()
             ->where(function ($query) use ($product) {
                 $query->where('product_id', $product->id)
                       ->orWhere('sub_product_id', $product->id);
@@ -271,6 +272,7 @@ class LicenseController extends Controller
                 'full_path' => $license->subProduct 
                     ? "{$license->product->name} / {$license->subProduct->name}"
                     : $license->product->name,
+                'is_owner' => $license->pivot->is_owner,
             ]);
 
         return response()->json($licenses);
@@ -294,65 +296,53 @@ class LicenseController extends Controller
                 ]);
             }
             
-            $createdCount = 0;
+            $sharedCount = 0;
             
-            DB::transaction(function () use ($licenseIds, $sourceUser, $assignUser, &$createdCount) {
+            DB::transaction(function () use ($licenseIds, $sourceUser, $assignUser, &$sharedCount) {
                 foreach ($licenseIds as $licenseId) {
-                    $sourceLicense = License::query()->findOrFail((int) $licenseId);
+                    $license = License::query()->findOrFail((int) $licenseId);
                     
-                    // Verify license belongs to source user
-                    if ($sourceLicense->user_id !== $sourceUser->id) {
+                    // Verify license is owned by source user
+                    $isOwned = $license->users()
+                        ->wherePivot('user_id', $sourceUser->id)
+                        ->wherePivot('is_owner', true)
+                        ->exists();
+                    
+                    if (!$isOwned) {
                         continue;
                     }
                     
-                    // Determine product IDs
-                    $targetProductId = $sourceLicense->product_id;
-                    $targetSubProductId = $sourceLicense->sub_product_id;
-                    
-                    // Check if this user already has this license key
-                    $existingLicense = License::query()
-                        ->where('user_id', $assignUser->id)
-                        ->where('product_id', $targetProductId)
-                        ->where(function ($query) use ($targetSubProductId) {
-                            if ($targetSubProductId) {
-                                $query->where('sub_product_id', $targetSubProductId);
-                            } else {
-                                $query->whereNull('sub_product_id');
-                            }
-                        })
-                        ->where('license_key_hash', License::licenseKeyHash($sourceLicense->license_key))
+                    // Check if assign user already has access to this license
+                    $alreadyHasAccess = $license->users()
+                        ->wherePivot('user_id', $assignUser->id)
                         ->exists();
                     
-                    if ($existingLicense) {
-                        continue; // Skip duplicate
+                    if ($alreadyHasAccess) {
+                        continue; // Skip if user already has access
                     }
                     
-                    // Create new license
-                    License::query()->create([
-                        'user_id' => $assignUser->id,
-                        'product_id' => $targetProductId,
-                        'sub_product_id' => $targetSubProductId,
-                        'license_type_id' => $sourceLicense->license_type_id,
-                        'license_key' => $sourceLicense->license_key,
-                        'client_name' => $assignUser->organization?->name ?? $assignUser->name,
-                        'quantity' => 1,
-                        'max_activations' => $sourceLicense->max_activations,
-                        'expired_date' => $sourceLicense->expired_date,
+                    // Share license by attaching user to pivot table
+                    $license->users()->attach($assignUser->id, [
+                        'is_owner' => false,
+                        'shared_by' => auth()->id(),
+                        'shared_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                     
-                    $createdCount++;
+                    $sharedCount++;
                 }
             });
 
-            if ($createdCount === 0) {
+            if ($sharedCount === 0) {
                 return redirect()
                     ->back()
-                    ->with('error', 'No licenses were shared. They may already exist for this user.');
+                    ->with('error', 'No licenses were shared. They may already be shared with this user.');
             }
 
             return redirect()
                 ->route('admin.licenses.index')
-                ->with('status', "{$createdCount} license(s) shared successfully.");
+                ->with('status', "{$sharedCount} license(s) shared successfully.");
         }
 
         // Handle batch creation when license_keys array is provided or no_license_key is checked
@@ -556,6 +546,7 @@ class LicenseController extends Controller
             'user.organization',
             'licenseType',
             'activations' => fn ($query) => $query->latest(),
+            'users' => fn ($query) => $query->with('organization')->orderBy('license_user.is_owner', 'desc'),
         ]);
 
         return view('admin.licenses.show', [
@@ -635,7 +626,7 @@ class LicenseController extends Controller
 
     public function update(Request $request, License $license): RedirectResponse
     {
-        // For edit, only allow updating the license key
+        // For edit, allow updating license key, max_activations, and expired_date
         $data = $request->validate([
             'license_key' => [
                 'nullable',
@@ -656,11 +647,29 @@ class LicenseController extends Controller
                     }
                 },
             ],
+            'max_activations' => ['nullable', 'integer', 'min:1', 'max:999999'],
+            'expired_date' => ['nullable', 'date'],
         ]);
 
-        // Only update if a new key is provided
+        $updateData = [];
+
+        // Only update license key if a new one is provided
         if (! blank($data['license_key'] ?? null)) {
-            $license->update(['license_key' => $data['license_key']]);
+            $updateData['license_key'] = $data['license_key'];
+        }
+
+        // Update max_activations if provided (can be null to remove limit)
+        if ($request->has('max_activations')) {
+            $updateData['max_activations'] = $data['max_activations'];
+        }
+
+        // Update expired_date if provided (can be null to remove expiry)
+        if ($request->has('expired_date')) {
+            $updateData['expired_date'] = $data['expired_date'];
+        }
+
+        if (! empty($updateData)) {
+            $license->update($updateData);
         }
 
         return redirect()
@@ -731,6 +740,40 @@ class LicenseController extends Controller
             ->with('status', 'Activation removed.');
     }
 
+    public function revokeAccess(License $license, User $user): RedirectResponse
+    {
+        // Check if user has access to this license
+        $hasAccess = $license->users()->wherePivot('user_id', $user->id)->exists();
+        
+        if (!$hasAccess) {
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'User does not have access to this license.']);
+        }
+
+        // Check if user is the owner
+        $isOwner = $license->users()
+            ->wherePivot('user_id', $user->id)
+            ->wherePivot('is_owner', true)
+            ->exists();
+        
+        if ($isOwner) {
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Cannot revoke access from license owner.']);
+        }
+
+        // Set access_revoked_at timestamp
+        $license->users()->updateExistingPivot($user->id, [
+            'access_revoked_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.licenses.show', $license)
+            ->with('status', "Access revoked for {$user->name}.");
+    }
+
+
     /**
      * @return array<string, mixed>
      */
@@ -748,7 +791,7 @@ class LicenseController extends Controller
             'user_id' => [
                 'required_if:license_mode,new_license',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])),
             ],
             'product_id' => ['required_if:license_mode,new_license', 'integer', Rule::exists('products', 'id')],
             'sub_product_id' => ['nullable', 'integer', Rule::exists('products', 'id')],
@@ -817,7 +860,7 @@ class LicenseController extends Controller
             'user_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])),
             ],
             'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
             'sub_product_id' => ['nullable', 'integer', Rule::exists('products', 'id')],
@@ -858,7 +901,7 @@ class LicenseController extends Controller
         return [
             'users' => User::query()
                 ->with('organization')
-                ->where('role', User::ROLE_USER)
+                ->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])
                 ->orderBy('name')
                 ->get(),
             'licenseTypes' => LicenseType::query()

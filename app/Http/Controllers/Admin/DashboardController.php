@@ -13,6 +13,11 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
+        // Count licenses that are shared (have at least one non-owner user)
+        $sharedLicensesCount = License::query()
+            ->whereHas('sharedWith')
+            ->count();
+
         return view('admin.dashboard', [
             'organizationCount' => Organization::query()->count(),
             'activeOrganizationCount' => Organization::query()->active()->count(),
@@ -22,6 +27,7 @@ class DashboardController extends Controller
             'activeProductCount' => Product::query()->active()->count(),
             'licenseCount' => License::query()->count(),
             'expiringLicenseCount' => License::query()->expiringSoon()->count(),
+            'sharedLicensesCount' => $sharedLicensesCount,
         ]);
     }
 }

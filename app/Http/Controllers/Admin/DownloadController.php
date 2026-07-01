@@ -111,7 +111,7 @@ class DownloadController extends Controller
             'user_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', User::ROLE_USER)),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])),
             ],
             'file_name' => ['nullable', 'string', 'max:255'],
             'file_upload' => ['nullable', 'file'],
@@ -219,7 +219,7 @@ class DownloadController extends Controller
     {
         $users = User::query()
             ->with('organization')
-            ->where('role', User::ROLE_USER)
+            ->whereIn('role', [User::ROLE_CLIENT, User::ROLE_PARTNER])
             ->orderBy('name')
             ->get();
 

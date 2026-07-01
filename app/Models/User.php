@@ -21,6 +21,9 @@ class User extends Authenticatable
 
     public const ROLE_PARTNER = 'partner';
 
+    // Backward compatibility alias - DEPRECATED
+    public const ROLE_USER = 'client';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -73,6 +76,39 @@ class User extends Authenticatable
     public function licenses(): HasMany
     {
         return $this->hasMany(License::class);
+    }
+
+    /**
+     * All licenses this user has access to (owned + shared)
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<License>
+     */
+    public function accessibleLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(License::class, 'license_user')
+            ->withPivot(['is_owner', 'shared_by', 'shared_at', 'access_revoked_at'])
+            ->withTimestamps()
+            ->wherePivotNull('access_revoked_at');
+    }
+
+    /**
+     * Licenses owned by this user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<License>
+     */
+    public function ownedLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->accessibleLicenses()->wherePivot('is_owner', true);
+    }
+
+    /**
+     * Licenses shared with this user (not owned)
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<License>
+     */
+    public function sharedLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->accessibleLicenses()->wherePivot('is_owner', false);
     }
 
     /**

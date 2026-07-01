@@ -29,7 +29,7 @@
 </div>
 
 {{-- ── Stats Row ── --}}
-<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 mb-8">
     @php
         $stats = [
             [
@@ -59,6 +59,13 @@
                 'sublabel' => $expiringLicenseCount . ' expiring soon',
                 'color' => 'text-green-400',
                 'icon' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
+            ],
+            [
+                'label' => 'Shared Licenses',
+                'value' => $sharedLicensesCount,
+                'sublabel' => 'Shared with users',
+                'color' => 'text-blue-400',
+                'icon' => 'M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z'
             ],
         ];
     @endphp

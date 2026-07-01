@@ -35,6 +35,21 @@ class License extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Automatically create pivot entry when license is created
+        static::created(function (License $license) {
+            if ($license->user_id) {
+                $license->users()->attach($license->user_id, [
+                    'is_owner' => true,
+                    'shared_at' => $license->created_at,
+                    'created_at' => $license->created_at,
+                    'updated_at' => $license->created_at,
+                ]);
+            }
+        });
+    }
+
     public function setLicenseKeyAttribute($value): void
     {
         if (blank($value)) {
@@ -115,6 +130,39 @@ class License extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * All users who have access to this license (owner + shared users)
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<User>
+     */
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'license_user')
+            ->withPivot(['is_owner', 'shared_by', 'shared_at', 'access_revoked_at'])
+            ->withTimestamps()
+            ->wherePivotNull('access_revoked_at');
+    }
+
+    /**
+     * Get the owner of this license
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<User>
+     */
+    public function owner(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->users()->wherePivot('is_owner', true);
+    }
+
+    /**
+     * Get users who have this license shared with them (not owners)
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<User>
+     */
+    public function sharedWith(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->users()->wherePivot('is_owner', false);
     }
 
     /**
