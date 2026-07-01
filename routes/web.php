@@ -30,7 +30,7 @@ Route::get('/dashboard', function () {
         return redirect()->route('admin.dashboard');
     }
 
-    if ($user?->isUser()) {
+    if ($user?->isClientOrPartner()) {
         return redirect()->route('user.dashboard');
     }
 
@@ -72,7 +72,7 @@ Route::middleware(['auth', 'verified', 'role:'.User::ROLE_ADMIN])
         Route::resource('quotations', QuotationController::class);
     });
 
-Route::middleware(['auth', 'verified', 'role:'.User::ROLE_USER])
+Route::middleware(['auth', 'verified', 'role:'.User::ROLE_CLIENT.'|'.User::ROLE_PARTNER])
     ->prefix('user')
     ->name('user.')
     ->group(function (): void {

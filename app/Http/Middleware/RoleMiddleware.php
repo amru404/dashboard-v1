@@ -12,7 +12,7 @@ class RoleMiddleware
     /**
      * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string $roles): Response
     {
         $user = $request->user();
 
@@ -31,7 +31,9 @@ class RoleMiddleware
             ]);
         }
 
-        if ($user->role !== $role) {
+        // Support multiple roles separated by pipe: role:admin|client|partner
+        $allowedRoles = explode('|', $roles);
+        if (! in_array($user->role, $allowedRoles, true)) {
             abort(403);
         }
 

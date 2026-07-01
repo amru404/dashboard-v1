@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Veriotech') }}</title>
+    <title>{{ config('app.name', 'Vericotech') }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
                 </div>
 
                 {{-- Branding content --}}
-                <div class="relative z-10 max-w-sm -translate-y-12">
+                <div class="relative z-10 max-w-sm -translate-y-40">
                     <p class="text-eyebrow tracking-[0.18em] text-vd-primary uppercase mb-4">SOFTWARE ACCESS</p>
                     <h1 class="text-headline-lg text-vd-text leading-tight mb-5">Manage Access. Download Confidently.</h1>
                     <p class="text-body-md text-vd-muted leading-relaxed">

@@ -59,7 +59,7 @@ class DemoWeekTwoSeeder extends Seeder
                 'organization_id' => $acme->id,
                 'name' => 'Customer User',
                 'password' => Hash::make('password'),
-                'role' => User::ROLE_USER,
+                'role' => User::ROLE_CLIENT,
                 'is_active' => true,
                 'email_verified_at' => now(),
             ],

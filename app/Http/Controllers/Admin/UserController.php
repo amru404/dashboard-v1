@@ -48,7 +48,7 @@ class UserController extends Controller
     {
         return view('admin.users.create', [
             'organizations' => $this->organizations(),
-            'user' => new User(['role' => User::ROLE_USER, 'is_active' => true]),
+            'user' => new User(['role' => User::ROLE_CLIENT, 'is_active' => true]),
             'roles' => $this->roles(),
         ]);
     }
@@ -123,7 +123,8 @@ class UserController extends Controller
     {
         return [
             User::ROLE_ADMIN,
-            User::ROLE_USER,
+            User::ROLE_CLIENT,
+            User::ROLE_PARTNER,
         ];
     }
 
@@ -143,7 +144,7 @@ class UserController extends Controller
     private function validatedData(Request $request, ?User $user = null, bool $passwordRequired = false): array
     {
         $rules = [
-            'organization_id' => ['required_if:role,'.User::ROLE_USER, 'nullable', 'exists:organizations,id'],
+            'organization_id' => ['required_if:role,'.User::ROLE_CLIENT.',required_if:role,'.User::ROLE_PARTNER, 'nullable', 'exists:organizations,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',

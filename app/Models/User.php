@@ -17,7 +17,9 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
 
-    public const ROLE_USER = 'user';
+    public const ROLE_CLIENT = 'client';
+
+    public const ROLE_PARTNER = 'partner';
 
     /**
      * The attributes that are mass assignable.
@@ -118,9 +120,24 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADMIN;
     }
 
+    public function isClient(): bool
+    {
+        return $this->role === self::ROLE_CLIENT;
+    }
+
+    public function isPartner(): bool
+    {
+        return $this->role === self::ROLE_PARTNER;
+    }
+
+    public function isClientOrPartner(): bool
+    {
+        return $this->role === self::ROLE_CLIENT || $this->role === self::ROLE_PARTNER;
+    }
+
     public function isUser(): bool
     {
-        return $this->role === self::ROLE_USER;
+        return $this->isClientOrPartner();
     }
 
     public function isActive(): bool

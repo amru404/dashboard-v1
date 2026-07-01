@@ -64,16 +64,44 @@
                     <span class="text-xs font-semibold text-vd-muted">reCAPTCHA</span>
                 </div>
 
-                <div
-                    class="g-recaptcha flex justify-center"
-                    data-sitekey="{{ config('services.recaptcha.site_key') }}"
-                    data-callback="onRecaptchaVerified"
-                    data-expired-callback="onRecaptchaExpired"
-                    data-error-callback="onRecaptchaExpired"
-                ></div>
+                <div class="recaptcha-container">
+                    <div
+                        class="g-recaptcha"
+                        data-sitekey="{{ config('services.recaptcha.site_key') }}"
+                        data-callback="onRecaptchaVerified"
+                        data-expired-callback="onRecaptchaExpired"
+                        data-error-callback="onRecaptchaExpired"
+                    ></div>
+                </div>
 
                 <x-input-error :messages="$errors->get('g-recaptcha-response')" class="mt-3" />
             </div>
+            
+            <style>
+                /* Make reCAPTCHA responsive */
+                .recaptcha-container {
+                    display: flex;
+                    justify-content: center;
+                    overflow: visible;
+                }
+                
+                .g-recaptcha {
+                    transform: scale(0.9);
+                    transform-origin: center center;
+                }
+                
+                @media (max-width: 400px) {
+                    .g-recaptcha {
+                        transform: scale(0.77);
+                    }
+                }
+                
+                @media (min-width: 640px) {
+                    .g-recaptcha {
+                        transform: scale(1);
+                    }
+                }
+            </style>
         @endif
 
         {{-- ── Remember me checkbox ── --}}

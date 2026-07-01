@@ -33,8 +33,6 @@ class LicenseController extends Controller
             ->latest()
             ->get();
 
-
-            // dd($licenses);
         $products = Product::query()
             ->whereNull('parent_id')
             ->with(['subProducts' => fn ($query) => $query->orderBy('name')])
