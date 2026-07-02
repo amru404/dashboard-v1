@@ -93,6 +93,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Documentation routes (accessible by all authenticated users)
+    Route::prefix('documentation')->name('documentation.')->group(function () {
+        Route::get('/user-guide', [\App\Http\Controllers\DocumentationController::class, 'userGuide'])->name('user-guide');
+        Route::get('/admin-guide', [\App\Http\Controllers\DocumentationController::class, 'adminGuide'])->name('admin-guide');
+        Route::get('/api', [\App\Http\Controllers\DocumentationController::class, 'apiDocumentation'])->name('api');
+    });
 });
 
 require __DIR__.'/auth.php';

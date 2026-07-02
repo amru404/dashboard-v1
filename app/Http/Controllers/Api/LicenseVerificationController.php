@@ -436,6 +436,7 @@ class LicenseVerificationController extends Controller
 
         // Get licenses for THIS SPECIFIC PRODUCT ONLY (not sub_product_id)
         $query = License::where('product_id', $product->id)
+            ->whereNotNull('license_key')
             ->whereNull('sub_product_id') // Only licenses where this is the parent product
             ->with(['licenseType', 'users' => fn($q) => $q->wherePivot('is_owner', true)]);
 
