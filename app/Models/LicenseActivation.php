@@ -23,6 +23,7 @@ class LicenseActivation extends Model
         'hostname',
         'location',
         'status',
+        'activated_at',
     ];
 
     public function setDeviceIdAttribute($value): void
